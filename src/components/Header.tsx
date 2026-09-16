@@ -13,10 +13,12 @@ import {
   Menu,
   X,
   RefreshCw,
-  FolderOpen
+  FolderOpen,
+  Download
 } from 'lucide-react';
 import { User } from 'firebase/auth';
 import { ActiveTab } from '../types';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -30,6 +32,7 @@ interface HeaderProps {
   isSyncingDrive: boolean;
   onSyncDrive: () => void;
   hasDriveAccess: boolean;
+  onOpenDownloadModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -43,7 +46,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCreate,
   isSyncingDrive,
   onSyncDrive,
-  hasDriveAccess
+  hasDriveAccess,
+  onOpenDownloadModal
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -115,6 +119,21 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Action Buttons: Drive Sync, Auth */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* In-App PWA Install Prompt */}
+            <PWAInstallButton />
+
+            {/* Download Recipe JSONs Modal Trigger */}
+            {onOpenDownloadModal && (
+              <button
+                onClick={onOpenDownloadModal}
+                title="Download Heirloom Recipe JSON files"
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-neutral-600" />
+                <span>Recipe JSONs</span>
+              </button>
+            )}
+
             {/* Drive Status / Sync Indicator */}
             {currentUser && (
               <button
@@ -206,6 +225,15 @@ export const Header: React.FC<HeaderProps> = ({
             >
               Shared Recipes
             </button>
+            {onOpenDownloadModal && (
+              <button
+                onClick={() => { onOpenDownloadModal(); setMobileMenuOpen(false); }}
+                className="text-left px-3 py-2 rounded-lg text-sm text-neutral-800 font-medium flex items-center gap-2 bg-white border border-neutral-200"
+              >
+                <Download className="w-4 h-4 text-neutral-600" />
+                Download Recipe JSONs
+              </button>
+            )}
             {currentUser && (
               <button
                 onClick={() => { onSyncDrive(); setMobileMenuOpen(false); }}

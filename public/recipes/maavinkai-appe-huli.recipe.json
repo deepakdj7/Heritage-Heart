@@ -1,0 +1,40 @@
+{
+  "id": "9f574853-33b0-4898-9676-2e98203d2a5f",
+  "title": "Maavinkai Appe Huli",
+  "kannadaTitle": "ಮಾವಿನಕಾಯಿ ಅಪ್ಪೆ ಹುಳಿ",
+  "description": "Tantalizing Malnad raw mango rasam-broth seasoned with green chillies, aromatic asafoetida, and tempered cumin in pure coconut oil.",
+  "category": "Heirloom Classics",
+  "cuisine": "Malnad / Coastal Karnataka",
+  "prepTimeMinutes": 10,
+  "cookTimeMinutes": 20,
+  "servings": 8,
+  "difficulty": "Easy",
+  "ingredients": [
+    { "id": "ing-1", "name": "Raw tart mango", "amount": "1", "unit": "piece" },
+    { "id": "ing-2", "name": "Green chillies (slit)", "amount": "4", "unit": "pcs" },
+    { "id": "ing-3", "name": "Jeera (cumin seeds)", "amount": "0.5", "unit": "tbsp" },
+    { "id": "ing-4", "name": "Fresh curry leaves", "amount": "10", "unit": "leaves" },
+    { "id": "ing-5", "name": "Asafoetida (hing)", "amount": "0.25", "unit": "tsp" },
+    { "id": "ing-6", "name": "Cold-pressed coconut oil", "amount": "1", "unit": "tbsp" },
+    { "id": "ing-7", "name": "Salt to taste", "amount": "To taste", "unit": "" }
+  ],
+  "steps": [
+    { "id": "step-1", "stepNumber": 1, "instruction": "Pressure-cook cut raw mango pieces with slit green chillies and water for 4 whistles until soft." },
+    { "id": "step-2", "stepNumber": 2, "instruction": "Allow to cool, mash pulp thoroughly by hand in the cooking water, and sieve to extract smooth tangy juice." },
+    { "id": "step-3", "stepNumber": 3, "instruction": "Heat coconut oil in a pan; add jeera, hing, and fresh curry leaves to crackle." },
+    { "id": "step-4", "stepNumber": 4, "instruction": "Pour tempering into the raw mango broth and bring to a gentle 1-minute boil." }
+  ],
+  "storyOrOrigin": "A timeless Malnad summer digestive preparation made with tart wild raw mangoes, served alongside piping hot rice and papad.",
+  "grandmasSecrets": [
+    "If you want to take the rasam path, dry-roast jeera and black pepper and crush coarsely with a mortar and pestle."
+  ],
+  "tags": ["Malnad", "Raw Mango", "Appe Huli", "Coastal", "Summer"],
+  "imageUrl": "https://udupi-recipes.com/wp-content/uploads/2018/04/tasty-appe-huli.jpg",
+  "authorId": "family-vault",
+  "authorName": "Deepak DJ's Kitchen",
+  "createdAt": "2026-05-07T09:32:01.660Z",
+  "updatedAt": "2026-05-07T09:32:01.660Z",
+  "isPublic": true,
+  "sharedWithEmails": [],
+  "forkCount": 0
+}

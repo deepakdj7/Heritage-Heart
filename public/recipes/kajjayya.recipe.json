@@ -1,0 +1,47 @@
+{
+  "id": "seed-kajjayya-001",
+  "title": "Kajjayya",
+  "kannadaTitle": "ಕಜ್ಜಾಯ",
+  "description": "Traditional festive sweet made from soaked raw rice and jaggery paaka, flavored with cardamom, roasted sesame seeds, and dry coconut.",
+  "category": "Dessert",
+  "cuisine": "Karnataka Traditional",
+  "prepTimeMinutes": 4320,
+  "cookTimeMinutes": 120,
+  "servings": 35,
+  "difficulty": "Traditional Expert",
+  "ingredients": [
+    { "id": "ing-1", "name": "Raw rice (washed & soaked 3 days)", "amount": "2", "unit": "cups", "notes": "Change water daily" },
+    { "id": "ing-2", "name": "Jaggery (crushed organic)", "amount": "1.75", "unit": "cups" },
+    { "id": "ing-3", "name": "Roasted sesame seeds / yellu", "amount": "2", "unit": "tbsp" },
+    { "id": "ing-4", "name": "Roasted poppy seeds / gasgase", "amount": "1", "unit": "tbsp" },
+    { "id": "ing-5", "name": "Dry coconut (grated / kobbari)", "amount": "0.5", "unit": "cup" },
+    { "id": "ing-6", "name": "Cardamom (freshly powdered)", "amount": "5", "unit": "pods" },
+    { "id": "ing-7", "name": "Water (for jaggery paaka)", "amount": "0.75", "unit": "cup" },
+    { "id": "ing-8", "name": "Oil for deep frying", "amount": "As needed", "unit": "" }
+  ],
+  "steps": [
+    { "id": "step-1", "stepNumber": 1, "instruction": "Wash the rice and soak in water for 3 days. Be sure to change the water every morning." },
+    { "id": "step-2", "stepNumber": 2, "instruction": "On the day of making, drain the rice and spread on a dry cotton cloth for 30 minutes. The rice must stay slightly moist — not bone dry." },
+    { "id": "step-3", "stepNumber": 3, "instruction": "Powder the rice to chiroti rava consistency. Keep covered with a moist cloth so it retains hydration." },
+    { "id": "step-4", "stepNumber": 4, "instruction": "Paaka: Add jaggery and water to a heavy pot over medium–high heat. Bring to a rolling boil." },
+    { "id": "step-5", "stepNumber": 5, "instruction": "Paaka test: drop a little into water on a plate. If it flows when tilted, cook further. If it solidifies into a soft ball and does not flow, it is ready." },
+    { "id": "step-6", "stepNumber": 6, "instruction": "Lower heat to medium; stir in roasted sesame, poppy seeds, dry coconut, and cardamom." },
+    { "id": "step-7", "stepNumber": 7, "instruction": "Add rice powder gradually while stirring continuously to avoid lumps. Cook on medium for 5 minutes until dough is soft yet firm." },
+    { "id": "step-8", "stepNumber": 8, "instruction": "Cool dough for 20–30 minutes until comfortable to handle. Shape lemon-sized portions, flatten on greased sheet, and deep-fry in medium-hot oil." },
+    { "id": "step-9", "stepNumber": 9, "instruction": "When kajjayya floats, flip to brown evenly. Remove when tan-brown and press gently to drain excess oil." }
+  ],
+  "storyOrOrigin": "An ancient Karnataka festive delicacy prepared for Deepavali and major family rituals, famed for its tender crumb and rich jaggery sweetness.",
+  "grandmasSecrets": [
+    "Getting the paaka right is the most important thing. Have everything ready — once the jaggery reaches the right stage you must work fast.",
+    "Keep the pounded rice covered with a moist cloth; if it dries out, the kajjayya will break in oil."
+  ],
+  "tags": ["Sweet", "Traditional", "Festive", "Deepavali"],
+  "imageUrl": "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=1000&q=80",
+  "authorId": "family-vault",
+  "authorName": "Grandma's Kitchen",
+  "createdAt": "2026-04-28T10:25:21.637Z",
+  "updatedAt": "2026-04-28T10:25:21.637Z",
+  "isPublic": true,
+  "sharedWithEmails": [],
+  "forkCount": 0
+}

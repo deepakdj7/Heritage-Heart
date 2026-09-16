@@ -1,0 +1,46 @@
+{
+  "id": "2ec816d3-445c-47b6-9fe3-2e97418aa678",
+  "title": "Kodbale",
+  "kannadaTitle": "ಕೋಡುಬಳೆ",
+  "description": "Crunchy, ring-shaped spiced snack made with rice flour, chiroti rava, dry coconut, and ajwain, seasoned with red chilli powder and hot ghee.",
+  "category": "Snacks",
+  "cuisine": "Karnataka Traditional",
+  "prepTimeMinutes": 20,
+  "cookTimeMinutes": 30,
+  "servings": 20,
+  "difficulty": "Intermediate",
+  "ingredients": [
+    { "id": "ing-1", "name": "Rice flour", "amount": "250", "unit": "grams" },
+    { "id": "ing-2", "name": "Chiroti rava (fine semolina)", "amount": "2", "unit": "tbsp" },
+    { "id": "ing-3", "name": "Maida (all purpose flour)", "amount": "2", "unit": "tbsp" },
+    { "id": "ing-4", "name": "Dry coconut (finely grated)", "amount": "2", "unit": "tbsp" },
+    { "id": "ing-5", "name": "Chilli powder", "amount": "3", "unit": "tsp" },
+    { "id": "ing-6", "name": "Ajwain (carom seeds)", "amount": "0.5", "unit": "tsp" },
+    { "id": "ing-7", "name": "Curry leaves (finely chopped)", "amount": "2", "unit": "sprigs" },
+    { "id": "ing-8", "name": "Asafoetida (hing)", "amount": "1", "unit": "pinch" },
+    { "id": "ing-9", "name": "Pure ghee (smoking hot)", "amount": "2-3", "unit": "tbsp" },
+    { "id": "ing-10", "name": "Salt to taste & Oil for frying", "amount": "As needed", "unit": "" }
+  ],
+  "steps": [
+    { "id": "step-1", "stepNumber": 1, "instruction": "In a wide bowl, combine rice flour, chiroti rava, maida, dry coconut, chilli powder, ajwain, chopped curry leaves, hing, and salt." },
+    { "id": "step-2", "stepNumber": 2, "instruction": "Heat 2-3 tablespoons of pure ghee until smoking hot and pour directly over the dry flour mixture." },
+    { "id": "step-3", "stepNumber": 3, "instruction": "Rub the flour between your palms until the mixture holds its shape when squeezed like breadcrumbs." },
+    { "id": "step-4", "stepNumber": 4, "instruction": "Sprinkle water gradually to knead into a smooth, non-sticky dough. Rest covered for 15 minutes." },
+    { "id": "step-5", "stepNumber": 5, "instruction": "Pinch small portions, roll into pencil-thick cylinders, and join the ends to form rings (kodbale)." },
+    { "id": "step-6", "stepNumber": 6, "instruction": "Deep-fry on low-medium flame patiently until deep golden and crunchy throughout." }
+  ],
+  "storyOrOrigin": "The quintessential festival and monsoon savory of Karnataka, perfect with a hot tumbler of Mysore filter coffee.",
+  "grandmasSecrets": [
+    "Hot ghee rubbing ('moyan') is what gives the kodbale its lasting flaky crunch.",
+    "Fry on low-medium flame; frying on high heat leaves the center chewy instead of crisp."
+  ],
+  "tags": ["Karnataka", "Snacks", "Savory", "Crispy", "Tea Time"],
+  "imageUrl": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhCLJ17zFPcb6_yriX1dgkugyEzanAZoKOE9cen0fTY8N5XgDo2TN8crWWgSScVILGboOUKOY-Q5WU8cvwyh2HPyyPYjB849jUFo1LPf2IXN5Mw_I-siUF2IAUHGujtu7cas2MTb8vWiKvJ/s1600/IMG_2080.jpg",
+  "authorId": "family-vault",
+  "authorName": "Deepak DJ's Kitchen",
+  "createdAt": "2026-09-04T14:02:56.665Z",
+  "updatedAt": "2026-09-04T14:02:56.665Z",
+  "isPublic": true,
+  "sharedWithEmails": [],
+  "forkCount": 0
+}

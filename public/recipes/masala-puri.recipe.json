@@ -1,0 +1,51 @@
+{
+  "id": "seed-masala-puri-001",
+  "title": "Masala Puri",
+  "kannadaTitle": "ಮಸಾಲ ಪುರಿ",
+  "description": "Authentic Bangalore street chaat with slow-simmered spiced green pea gravy served steaming hot over crushed crispy puris, onions, sweet chutney, and fine sev.",
+  "category": "Snacks",
+  "cuisine": "Bangalore Street Food",
+  "prepTimeMinutes": 480,
+  "cookTimeMinutes": 50,
+  "servings": 4,
+  "difficulty": "Intermediate",
+  "ingredients": [
+    { "id": "ing-1", "name": "Dried green/white peas (soaked overnight)", "amount": "1", "unit": "cup" },
+    { "id": "ing-2", "name": "Potatoes (cubed for pressure cooking)", "amount": "2", "unit": "medium" },
+    { "id": "ing-3", "name": "Turmeric powder", "amount": "0.5", "unit": "tsp" },
+    { "id": "ing-4", "name": "Fennel seeds (sompu)", "amount": "1", "unit": "tsp" },
+    { "id": "ing-5", "name": "Coriander seeds", "amount": "0.5", "unit": "tsp" },
+    { "id": "ing-6", "name": "Chilli powder", "amount": "0.5", "unit": "tsp" },
+    { "id": "ing-7", "name": "Jeera (cumin seeds)", "amount": "0.75", "unit": "tsp" },
+    { "id": "ing-8", "name": "Black salt / rock salt", "amount": "1", "unit": "tsp" },
+    { "id": "ing-9", "name": "Salt", "amount": "1.5", "unit": "tsp" },
+    { "id": "ing-10", "name": "Fresh ginger", "amount": "1", "unit": "inch" },
+    { "id": "ing-11", "name": "Garlic cloves (peeled)", "amount": "8-10", "unit": "cloves" },
+    { "id": "ing-12", "name": "Cloves (lavanga)", "amount": "2-3", "unit": "pcs" },
+    { "id": "ing-13", "name": "Green chillies", "amount": "8-10", "unit": "pcs" },
+    { "id": "ing-14", "name": "Onion (chopped for masala paste)", "amount": "1", "unit": "medium" },
+    { "id": "ing-15", "name": "Fresh coriander leaves", "amount": "1", "unit": "handful" },
+    { "id": "ing-16", "name": "Fresh mint leaves", "amount": "1", "unit": "handful" },
+    { "id": "ing-17", "name": "Crispy pani puris, sweet dates chutney, sev", "amount": "For serving", "unit": "" }
+  ],
+  "steps": [
+    { "id": "step-1", "stepNumber": 1, "instruction": "Grind fennel, coriander seeds, chilli powder, jeera, ginger, garlic, cloves, green chillies, onion, mint, and coriander with a splash of water to a velvety smooth paste." },
+    { "id": "step-2", "stepNumber": 2, "instruction": "Pressure-cook soaked peas and cubed potatoes with turmeric, salt, and 2.5 cups water for 3–4 whistles until peas are tender." },
+    { "id": "step-3", "stepNumber": 3, "instruction": "Add the raw ground masala paste to the cooked peas and potatoes; mash lightly with a ladle. Add water to adjust to a pourable gravy." },
+    { "id": "step-4", "stepNumber": 4, "instruction": "Simmer gently on medium heat for 20–25 minutes until the raw spice flavors blend into rich street-cart aroma." },
+    { "id": "step-5", "stepNumber": 5, "instruction": "To assemble: crush 4–5 puris into a bowl, ladle piping hot pea gravy, spoon sweet tamarind chutney, and top with diced onion, coriander, and generous sev." }
+  ],
+  "storyOrOrigin": "The beloved crown jewel of Bangalore chaat culture, savored on bustling street corners on cool evenings.",
+  "grandmasSecrets": [
+    "Set aside the finished masala for 4 to 5 hours for deeper flavour before serving, if you can."
+  ],
+  "tags": ["Savory", "Snacks", "Chaat", "Street Food", "Bangalore"],
+  "imageUrl": "https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=1000&q=80",
+  "authorId": "family-vault",
+  "authorName": "Bangalore Kitchen",
+  "createdAt": "2026-04-28T10:25:21.637Z",
+  "updatedAt": "2026-04-28T10:25:21.637Z",
+  "isPublic": true,
+  "sharedWithEmails": [],
+  "forkCount": 0
+}

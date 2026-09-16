@@ -1,0 +1,44 @@
+{
+  "id": "fa1fc654-ef15-4824-ba51-c3f6d5ee888a",
+  "title": "Akki Rotti - Thottaratti",
+  "kannadaTitle": "ಅಕ್ಕಿ ರೊಟ್ಟಿ / ತೊಟ್ಟಾರೊಟ್ಟಿ",
+  "description": "Paper-thin coastal rice flatbreads cooked with soaked raw rice paste, grated coconut, shallots, and spicy red chillies on an oiled kadai.",
+  "category": "Breakfast",
+  "cuisine": "Coastal Karnataka / Kerala",
+  "prepTimeMinutes": 120,
+  "cookTimeMinutes": 40,
+  "servings": 18,
+  "difficulty": "Intermediate",
+  "ingredients": [
+    { "id": "ing-1", "name": "Raw rice (soaked 2 hours)", "amount": "1", "unit": "cup" },
+    { "id": "ing-2", "name": "Grated coconut", "amount": "3", "unit": "tbsp" },
+    { "id": "ing-3", "name": "Shallots / small onions", "amount": "6-8", "unit": "pcs" },
+    { "id": "ing-4", "name": "Curry leaves", "amount": "2", "unit": "sprigs" },
+    { "id": "ing-5", "name": "Dried red chillies", "amount": "3", "unit": "pcs" },
+    { "id": "ing-6", "name": "Salt", "amount": "To taste", "unit": "" },
+    { "id": "ing-7", "name": "Water", "amount": "As needed (watery consistency)", "unit": "" },
+    { "id": "ing-8", "name": "Cold pressed coconut oil", "amount": "2", "unit": "tbsp" }
+  ],
+  "steps": [
+    { "id": "step-1", "stepNumber": 1, "instruction": "Soak raw rice for 2 hours, then grind to a silky smooth batter with minimal water." },
+    { "id": "step-2", "stepNumber": 2, "instruction": "Separately grind coconut, shallots, dried red chillies, and curry leaves; blend into the ground rice." },
+    { "id": "step-3", "stepNumber": 3, "instruction": "Add water to bring the batter to a thin, watery neer-dosa style consistency." },
+    { "id": "step-4", "stepNumber": 4, "instruction": "In a seasoned iron pan or kadai, smear a few drops of coconut oil, pour a ladle of batter, and swirl quickly to the outer rim." },
+    { "id": "step-5", "stepNumber": 5, "instruction": "Drizzle a few drops of coconut oil along the edges." },
+    { "id": "step-6", "stepNumber": 6, "instruction": "Cover with a lid and cook for 1 minute on medium. Remove lid; cook open for another 30 seconds." },
+    { "id": "step-7", "stepNumber": 7, "instruction": "The rotti will curl and naturally release from the pan. Fold and serve hot." }
+  ],
+  "storyOrOrigin": "A beloved coastal Malabar and Karnataka heirloom breakfast, paper-thin, laced with subtle coconut sweetness and aroma.",
+  "grandmasSecrets": [
+    "The batter must be thin and watery so it swirls effortlessly around the curved kadai."
+  ],
+  "tags": ["Kerala", "Karnataka", "Rotti", "Gluten-Free", "Breakfast"],
+  "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-GmjSLpHxFkku0F9FUJ2xcihmbYRlbvqm2oyRufyybabNK6-D3lqutn8&s=10",
+  "authorId": "family-vault",
+  "authorName": "Deepak DJ's Kitchen",
+  "createdAt": "2026-04-28T13:58:11.642Z",
+  "updatedAt": "2026-04-28T13:58:11.642Z",
+  "isPublic": true,
+  "sharedWithEmails": [],
+  "forkCount": 0
+}

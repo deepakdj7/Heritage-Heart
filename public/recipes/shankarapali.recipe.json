@@ -1,0 +1,40 @@
+{
+  "id": "5f405055-680c-4610-bb30-a1a7580cf396",
+  "title": "Shankarapali",
+  "kannadaTitle": "ಸಿಹಿ ಶಂಕರಪೋಳಿ",
+  "description": "Crispy, sweet diamond-cut pastry bites delicately sweetened with cardamom-infused powdered sugar and kneaded with fresh milk and ghee.",
+  "category": "Snacks",
+  "cuisine": "Karnataka / Maharashtra",
+  "prepTimeMinutes": 20,
+  "cookTimeMinutes": 38,
+  "servings": 25,
+  "difficulty": "Easy",
+  "ingredients": [
+    { "id": "ing-1", "name": "Maida (all-purpose flour)", "amount": "250", "unit": "grams" },
+    { "id": "ing-2", "name": "Powdered sugar with cardamom (elakki)", "amount": "100", "unit": "grams" },
+    { "id": "ing-3", "name": "Fresh milk (warm)", "amount": "2-3", "unit": "tbsp" },
+    { "id": "ing-4", "name": "Pure ghee (hot)", "amount": "2-3", "unit": "tbsp" },
+    { "id": "ing-5", "name": "Oil for deep frying", "amount": "As needed", "unit": "" }
+  ],
+  "steps": [
+    { "id": "step-1", "stepNumber": 1, "instruction": "In a mixing bowl, blend maida and cardamom powdered sugar thoroughly." },
+    { "id": "step-2", "stepNumber": 2, "instruction": "Heat ghee until hot and pour over the flour. Rub well between your palms so the fat incorporates evenly." },
+    { "id": "step-3", "stepNumber": 3, "instruction": "Add warm milk 1 tablespoon at a time to form a firm yet smooth dough (slightly softer than chapati dough)." },
+    { "id": "step-4", "stepNumber": 4, "instruction": "Cover with a clean cloth and rest for 15 minutes." },
+    { "id": "step-5", "stepNumber": 5, "instruction": "Roll the dough to approximately 1/2 cm thickness and cut into small diamonds using a pizza wheel or knife." },
+    { "id": "step-6", "stepNumber": 6, "instruction": "Deep-fry on medium-low flame until light golden brown. Drain and let cool completely to crisp up." }
+  ],
+  "storyOrOrigin": "A classic festive jar-snack prepared during Deepavali that stays crisp and melt-in-the-mouth for weeks.",
+  "grandmasSecrets": [
+    "Fry on medium-low heat; they will continue to crisp up as they cool on the wire rack."
+  ],
+  "tags": ["Sweet", "Crispy", "Festive", "Diwali", "Kids Favorite"],
+  "imageUrl": "https://www.whiskaffair.com/wp-content/uploads/2021/10/Shankarpali-2-1.jpg",
+  "authorId": "family-vault",
+  "authorName": "Deepak DJ's Kitchen",
+  "createdAt": "2026-09-04T14:03:45.833Z",
+  "updatedAt": "2026-09-04T14:03:45.833Z",
+  "isPublic": true,
+  "sharedWithEmails": [],
+  "forkCount": 0
+}

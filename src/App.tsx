@@ -15,7 +15,8 @@ import {
   Copy,
   ExternalLink,
   Flame,
-  ChefHat
+  ChefHat,
+  Download
 } from 'lucide-react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth, signInWithGoogleOAuth, logOut, getStoredDriveAccessToken } from './lib/firebase';
@@ -33,6 +34,8 @@ import { RecipeDetailModal } from './components/RecipeDetailModal';
 import { ShareModal } from './components/ShareModal';
 import { RecipeFormModal } from './components/RecipeFormModal';
 import { LoginPromptModal } from './components/LoginPromptModal';
+import { DownloadRecipesModal } from './components/DownloadRecipesModal';
+import { OfflineIndicator } from './components/OfflineIndicator';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -48,23 +51,39 @@ export default function App() {
   const [sharingRecipe, setSharingRecipe] = useState<Recipe | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   
   // Status feedback
   const [isSyncingDrive, setIsSyncingDrive] = useState(false);
   const [statusNotification, setStatusNotification] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  // Synchronous ref to prevent stale closures during async sync operations
+  const recipesRef = React.useRef<Recipe[]>(recipes);
+  useEffect(() => {
+    recipesRef.current = recipes;
+  }, [recipes]);
+
+  const autoSyncedRef = React.useRef(false);
 
   const showNotice = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
     setStatusNotification({ message, type });
     setTimeout(() => setStatusNotification(null), 4500);
   };
 
-  // 1. Auth Listener: Sign-in is mandatory
+  // 1. Auth Listener: Sign-in is mandatory & Auto-sync on app open
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       const token = getStoredDriveAccessToken();
-      setHasDriveToken(!!token);
+      const hasToken = !!token;
+      setHasDriveToken(hasToken);
       setIsAuthLoading(false);
+
+      // Auto-sync as soon as app opens if user has an active Drive token
+      if (user && hasToken && !autoSyncedRef.current) {
+        autoSyncedRef.current = true;
+        handleFullDriveSync(user);
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -89,21 +108,27 @@ export default function App() {
     }
   }, [recipes]);
 
-  // Handler: Google Sign-in with Drive Scope
+  // Handler: Google Sign-in with Drive Scope & Immediate Auto-Sync
   const handleSignIn = async () => {
     try {
+      setIsSyncingDrive(true);
       const res = await signInWithGoogleOAuth();
       setHasDriveToken(!!res.accessToken);
-      showNotice(`Signed in as ${res.user.displayName || res.user.email}. Google Drive connected!`, 'success');
+      showNotice(`Signed in as ${res.user.displayName || res.user.email}. Syncing recipes with Google Drive...`, 'info');
+      // Immediately run full Drive sync on login!
+      await handleFullDriveSync(res.user);
     } catch (err: any) {
       console.error(err);
       showNotice(err.message || 'Authentication failed', 'error');
+    } finally {
+      setIsSyncingDrive(false);
     }
   };
 
   const handleSignOut = async () => {
     await logOut();
     setHasDriveToken(false);
+    autoSyncedRef.current = false;
     showNotice('Signed out successfully', 'info');
   };
 
@@ -161,42 +186,69 @@ export default function App() {
   };
 
   // Handler: Sync entire cookbook collection to Google Drive & Pull from Drive
-  const handleFullDriveSync = async () => {
-    if (!hasDriveToken) {
+  const handleFullDriveSync = async (providedUser?: User | null) => {
+    const token = getStoredDriveAccessToken();
+    if (!token) {
       handleSignIn();
       return;
     }
 
+    const activeUser = providedUser !== undefined ? providedUser : currentUser;
+
     try {
       setIsSyncingDrive(true);
-      showNotice('Syncing recipes with Google Drive folder...', 'info');
+      showNotice('Syncing recipes with your Google Drive folder...', 'info');
 
-      // 1. Upload un-synced user recipes
-      const userRecipes = recipes.filter(r => !currentUser || r.authorId === currentUser.uid);
-      for (const recipe of userRecipes) {
-        try {
-          const driveResult = await saveRecipeToGoogleDrive(recipe);
-          await saveRecipeRealtime({
-            ...recipe,
-            driveFileId: driveResult.fileId,
-            driveWebLink: driveResult.webViewLink,
-            driveSyncedAt: new Date().toISOString(),
-          });
-        } catch (e) {
-          console.warn('Sync item failed:', e);
+      // 1. Fetch any recipes existing in Google Drive FIRST
+      const driveFiles = await loadRecipesFromGoogleDrive(
+        activeUser?.uid,
+        activeUser?.email || undefined
+      );
+
+      if (driveFiles.length > 0) {
+        // Instantly update state so user sees all recipes without delay
+        setRecipes((prev) => {
+          const map = new Map<string, Recipe>();
+          prev.forEach((r) => map.set(r.id, r));
+          driveFiles.forEach((r) => map.set(r.id, r));
+          return Array.from(map.values());
+        });
+
+        // Persist all loaded recipes to Firestore and local backup
+        for (const dRecipe of driveFiles) {
+          await saveRecipeRealtime(dRecipe);
         }
       }
 
-      // 2. Fetch any recipes existing in Google Drive
-      const driveFiles = await loadRecipesFromGoogleDrive();
-      for (const dRecipe of driveFiles) {
-        await saveRecipeRealtime(dRecipe);
+      // 2. Upload un-synced user recipes to Google Drive
+      const currentRecipes = recipesRef.current;
+      const userRecipes = currentRecipes.filter(
+        (r) => !activeUser || r.authorId === activeUser.uid || r.authorId === 'family-vault'
+      );
+      for (const recipe of userRecipes) {
+        if (!recipe.driveFileId) {
+          try {
+            const driveResult = await saveRecipeToGoogleDrive(recipe);
+            await saveRecipeRealtime({
+              ...recipe,
+              driveFileId: driveResult.fileId,
+              driveWebLink: driveResult.webViewLink,
+              driveSyncedAt: new Date().toISOString(),
+            });
+          } catch (e) {
+            console.warn('Sync item failed:', e);
+          }
+        }
       }
 
-      showNotice('Google Drive synchronization completed!', 'success');
+      if (driveFiles.length > 0) {
+        showNotice(`Google Drive synced: loaded ${driveFiles.length} recipes from your Drive!`, 'success');
+      } else {
+        showNotice('Google Drive synced. All recipes are up to date.', 'success');
+      }
     } catch (err: any) {
       console.error('Full drive sync failure:', err);
-      if (err.message && (err.message.includes('403') || err.message.includes('insufficient') || err.message.includes('PERMISSION_DENIED'))) {
+      if (err.message && (err.message.includes('403') || err.message.includes('insufficient') || err.message.includes('PERMISSION_DENIED') || err.message.includes('401'))) {
         setHasDriveToken(false);
         showNotice('Google Drive permission needed: please sign in again to grant Drive access.', 'error');
       } else {
@@ -279,9 +331,15 @@ export default function App() {
 
     // 3. Tab Specific Scoping
     if (activeTab === 'cookbook') {
-      // If user is logged in, show their recipes OR initial curated heirloom ones
+      // If user is logged in, show their recipes, curated heirloom recipes, and any recipes from Google Drive
       if (currentUser) {
-        return recipe.authorId === currentUser.uid || recipe.authorEmail === currentUser.email;
+        return (
+          recipe.authorId === currentUser.uid ||
+          recipe.authorEmail === currentUser.email ||
+          recipe.authorId === 'family-vault' ||
+          recipe.authorId === 'heirloom-vault' ||
+          !!recipe.driveFileId
+        );
       }
       return true; // Show all if guest
     }
@@ -331,6 +389,7 @@ export default function App() {
         isSyncingDrive={isSyncingDrive}
         onSyncDrive={handleFullDriveSync}
         hasDriveAccess={hasDriveToken}
+        onOpenDownloadModal={() => setIsDownloadModalOpen(true)}
       />
 
       {/* Hero Welcome Banner */}
@@ -344,26 +403,37 @@ export default function App() {
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-900">
               Heritage &amp; Heart
             </h1>
-            <p className="mt-2 text-sm sm:text-base text-neutral-600 max-w-2xl leading-relaxed">
+            <p className="mt-1 text-xs text-neutral-500 max-w-xl leading-relaxed">
               Preserve heirloom family recipes, handwritten memories, and culinary wisdom. Backed up in your personal Google Drive.
             </p>
           </div>
 
-          {/* Category Filter Pills */}
-          <div className="mt-7 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
-                  selectedCategory === cat
-                    ? 'bg-neutral-900 text-white shadow-xs'
-                    : 'bg-white border border-neutral-200 text-neutral-600 hover:border-neutral-300 hover:text-neutral-900'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+          {/* Category Filter Pills & Download Button */}
+          <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                    selectedCategory === cat
+                      ? 'bg-neutral-900 text-white shadow-xs'
+                      : 'bg-white border border-neutral-200 text-neutral-600 hover:border-neutral-300 hover:text-neutral-900'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setIsDownloadModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 shadow-2xs transition-colors cursor-pointer"
+              title="Download Recipe JSON files for Google Drive"
+            >
+              <Download className="w-3.5 h-3.5 text-neutral-600" />
+              <span>Download Recipe JSONs</span>
+            </button>
           </div>
 
         </div>
@@ -372,6 +442,42 @@ export default function App() {
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full pb-24">
         
+        {/* Drive Syncing Live Indicator */}
+        {isSyncingDrive && (
+          <div className="mb-5 bg-amber-50/90 border border-amber-200/80 rounded-xl px-4 py-3 flex items-center justify-between text-xs text-amber-950 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <RefreshCw className="w-4 h-4 text-amber-600 animate-spin" />
+              <span className="font-semibold">Syncing recipes with Google Drive...</span>
+              <span className="hidden sm:inline text-amber-700">Checking your cookbook folder and Drive files</span>
+            </div>
+            <span className="text-[11px] font-medium text-amber-600 bg-amber-100/60 px-2 py-0.5 rounded-md">Live Sync</span>
+          </div>
+        )}
+
+        {/* Connect Drive prompt if not connected */}
+        {!hasDriveToken && !isAuthLoading && (
+          <div className="mb-6 bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-neutral-50 border border-amber-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-800 shrink-0">
+                <Cloud className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs sm:text-sm font-semibold text-neutral-900">Google Drive Auto-Sync</h4>
+                <p className="text-xs text-neutral-600 mt-0.5">
+                  Sign in with Google to automatically sync and load all recipe JSONs from your Google Drive folder.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleSignIn}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium rounded-xl transition-colors cursor-pointer shrink-0 shadow-sm"
+            >
+              <Cloud className="w-3.5 h-3.5 text-amber-400" />
+              <span>Connect Google Drive</span>
+            </button>
+          </div>
+        )}
+
         {/* Tab Header & Count */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -410,7 +516,7 @@ export default function App() {
           </div>
         ) : (
           /* Empty State */
-          <div className="bg-white rounded-2xl border border-neutral-200 p-10 text-center max-w-md mx-auto my-12 shadow-2xs">
+          <div className="bg-white rounded-2xl border border-neutral-200 p-8 sm:p-10 text-center max-w-md mx-auto my-12 shadow-2xs">
             <div className="w-12 h-12 rounded-xl bg-neutral-100 text-neutral-800 mx-auto flex items-center justify-center mb-4">
               <ChefHat className="w-6 h-6" />
             </div>
@@ -420,15 +526,38 @@ export default function App() {
             <p className="text-xs text-neutral-500 mt-1 mb-5 leading-relaxed">
               {activeTab === 'shared-with-me'
                 ? 'No recipes have been directly shared with your email yet. Ask friends or family to share a link with you!'
-                : 'Start documenting your personal collection with family recipes, ingredients, and steps.'}
+                : searchQuery || selectedCategory !== 'All'
+                ? 'No recipes matched your search or category filter. Try clearing filters or syncing with Google Drive.'
+                : 'Your collection is ready for recipes. Sync with Google Drive to pull your recipe files or add your first heirloom recipe.'}
             </p>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs sm:text-sm font-medium transition-colors cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Recipe</span>
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-2.5">
+              <button
+                onClick={() => handleFullDriveSync()}
+                disabled={isSyncingDrive}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-medium transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncingDrive ? 'animate-spin' : ''}`} />
+                <span>{isSyncingDrive ? 'Syncing Drive...' : 'Sync with Google Drive'}</span>
+              </button>
+              {(searchQuery || selectedCategory !== 'All') && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('All');
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-xs sm:text-sm font-medium transition-colors cursor-pointer"
+                >
+                  <span>Clear Filters</span>
+                </button>
+              )}
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs sm:text-sm font-medium transition-colors cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Recipe</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -503,6 +632,15 @@ export default function App() {
         isOpen={!isAuthLoading && !currentUser}
         onSignIn={handleSignIn}
       />
+
+      {/* Download Recipe JSONs Modal */}
+      <DownloadRecipesModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
+      />
+
+      {/* Offline Status Toast Indicator */}
+      <OfflineIndicator />
 
     </div>
   );

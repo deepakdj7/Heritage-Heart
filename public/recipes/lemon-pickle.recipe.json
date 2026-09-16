@@ -1,0 +1,44 @@
+{
+  "id": "882bf4fb-47bc-41d5-a2c6-8e45e6e85a87",
+  "title": "Lemon Pickle",
+  "kannadaTitle": "ನಿಂಬೆಹಣ್ಣಿನ ಉಪ್ಪಿನಕಾಯಿ",
+  "description": "Heirloom sun-cured yellow lemons and whole garlic cloves steeped with powdered rock salt, roasted mustard-methi spice blend, and pungent Byadgi chilli.",
+  "category": "Heirloom Classics",
+  "cuisine": "Traditional Indian",
+  "prepTimeMinutes": 30,
+  "cookTimeMinutes": 20,
+  "servings": 60,
+  "difficulty": "Traditional Expert",
+  "ingredients": [
+    { "id": "ing-1", "name": "Fresh lemons (wiped dry)", "amount": "30", "unit": "pcs" },
+    { "id": "ing-2", "name": "Green chillies (halved)", "amount": "30", "unit": "pcs" },
+    { "id": "ing-3", "name": "Garlic (whole peeled cloves)", "amount": "4", "unit": "whole heads" },
+    { "id": "ing-4", "name": "Natural rock salt (powdered)", "amount": "2-3", "unit": "palms" },
+    { "id": "ing-5", "name": "Red chilli powder", "amount": "3", "unit": "tbsp" },
+    { "id": "ing-6", "name": "Mustard seeds (sasive)", "amount": "2", "unit": "tbsp" },
+    { "id": "ing-7", "name": "Menthya (fenugreek seeds)", "amount": "1", "unit": "tbsp" },
+    { "id": "ing-8", "name": "Hing (asafoetida)", "amount": "0.25", "unit": "tbsp" }
+  ],
+  "steps": [
+    { "id": "step-1", "stepNumber": 1, "instruction": "Wash lemons and chillies thoroughly, wipe dry with a clean cloth, ensuring zero water residue." },
+    { "id": "step-2", "stepNumber": 2, "instruction": "Cut lemons into eighths, slit chillies into halves, and peel garlic cloves." },
+    { "id": "step-3", "stepNumber": 3, "instruction": "Grind natural rock salt into powder. Add 2 palms of salt over lemons, chillies, and garlic in a clean glass/ceramic bharani jar." },
+    { "id": "step-4", "stepNumber": 4, "instruction": "Tie mouth of jar with clean cotton cloth. Set aside for 4-5 days, tossing 2-3 times daily until lemon rinds turn tender and juicy." },
+    { "id": "step-5", "stepNumber": 5, "instruction": "Dry-roast mustard, fenugreek (menthya), and hing. Coarsely crush with a mortar and pestle." },
+    { "id": "step-6", "stepNumber": 6, "instruction": "Add the roasted spice powder and red chilli powder to the cured lemons. Mix gently with a dry wooden spoon. Let mature for a few more days." }
+  ],
+  "storyOrOrigin": "The quintessential ceramic jar (jaadi/bharani) pickle handed down across generations, getting more medicinal and flavorful with age.",
+  "grandmasSecrets": [
+    "Always use rock salt ground fresh into powder. Table iodized salt doesn't cure the rind properly.",
+    "Keep the jar mouth tied with a breathable cotton cloth; never let moisture or wet spoons touch the pickle."
+  ],
+  "tags": ["Pickle", "Traditional", "Grandma Secret", "Heirloom", "Condiment"],
+  "imageUrl": "https://shwetainthekitchen.com/wp-content/uploads/2019/10/IMG_6719-scaled.jpg",
+  "authorId": "family-vault",
+  "authorName": "Deepak DJ's Kitchen",
+  "createdAt": "2026-09-04T14:04:41.508Z",
+  "updatedAt": "2026-09-04T14:04:41.508Z",
+  "isPublic": true,
+  "sharedWithEmails": [],
+  "forkCount": 0
+}

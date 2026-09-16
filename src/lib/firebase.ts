@@ -40,9 +40,13 @@ export const db = getFirestore(app);
 
 // Configure Google Provider with Drive Scope
 export const googleProvider = new GoogleAuthProvider();
+// Full drive permissions allow reading recipes uploaded/copied by the user directly in Drive UI
+googleProvider.addScope('https://www.googleapis.com/auth/drive');
+googleProvider.addScope('https://www.googleapis.com/auth/drive.readonly');
 googleProvider.addScope('https://www.googleapis.com/auth/drive.file');
 googleProvider.setCustomParameters({
-  prompt: 'select_account',
+  prompt: 'consent select_account',
+  access_type: 'offline'
 });
 
 // Helper for Google Sign In & Extracting OAuth Access Token

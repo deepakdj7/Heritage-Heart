@@ -1,0 +1,44 @@
+{
+  "id": "0c957d2d-0625-44ac-8a52-825918071246",
+  "title": "Burfi - 7 cups",
+  "kannadaTitle": "7 ಕಪ್ ಬರ್ಫಿ",
+  "description": "The foolproof traditional festive sweet crafted using 7 proportionate measures of gram flour, dry fruits, fresh coconut, milk, sugar, and golden ghee.",
+  "category": "Dessert",
+  "cuisine": "Karnataka / South Indian",
+  "prepTimeMinutes": 10,
+  "cookTimeMinutes": 30,
+  "servings": 15,
+  "difficulty": "Easy",
+  "ingredients": [
+    { "id": "ing-1", "name": "Kadale hittu (Gram flour / Besan)", "amount": "1", "unit": "cup" },
+    { "id": "ing-2", "name": "Cashews + Almonds (1:1 blend)", "amount": "1", "unit": "cup" },
+    { "id": "ing-3", "name": "Fresh grated coconut", "amount": "1", "unit": "cup" },
+    { "id": "ing-4", "name": "Milk", "amount": "1", "unit": "cup" },
+    { "id": "ing-5", "name": "Sugar", "amount": "1.5", "unit": "cups" },
+    { "id": "ing-6", "name": "Pure ghee", "amount": "1", "unit": "cup" },
+    { "id": "ing-7", "name": "Cardamom pods (crushed)", "amount": "5-6", "unit": "pods" }
+  ],
+  "steps": [
+    { "id": "step-1", "stepNumber": 1, "instruction": "Make a coarse powder of cashews, almonds, and cardamom in a small mixer jar." },
+    { "id": "step-2", "stepNumber": 2, "instruction": "Add besan to a heavy-bottomed kadai and dry roast on low flame until nutty and aromatic." },
+    { "id": "step-3", "stepNumber": 3, "instruction": "Add powdered dry fruit mix, sugar, milk, and grated coconut while stirring continuously to prevent lumps." },
+    { "id": "step-4", "stepNumber": 4, "instruction": "After 1 minute, pour in the melted ghee." },
+    { "id": "step-5", "stepNumber": 5, "instruction": "Keep stirring on medium-low flame. The mixture will darken slightly, then fluff up and bubble as the ghee separates." },
+    { "id": "step-6", "stepNumber": 6, "instruction": "When the texture becomes light, porous, and halwa-like, take it off heat immediately." },
+    { "id": "step-7", "stepNumber": 7, "instruction": "Pour into a pre-greased tray or thali. Cut into neat diamond squares after it partially sets." }
+  ],
+  "storyOrOrigin": "A classic grandmother recipe where a single glass or cup is used to measure every single ingredient with zero guesswork.",
+  "grandmasSecrets": [
+    "Fluffy and bubbly = Ready. The mix will feel light like a cloud on your ladle.",
+    "Use a single small tumbler or cup as the standard measure for all 7 portions."
+  ],
+  "tags": ["Sweet", "Festive", "Burfi", "Deepavali"],
+  "imageUrl": "https://www.vegrecipesofindia.com/wp-content/uploads/2017/01/7-cup-barfi-recipe-1a.jpg",
+  "authorId": "family-vault",
+  "authorName": "Deepak DJ's Kitchen",
+  "createdAt": "2026-04-28T10:35:56.264Z",
+  "updatedAt": "2026-04-28T10:35:56.264Z",
+  "isPublic": true,
+  "sharedWithEmails": [],
+  "forkCount": 0
+}

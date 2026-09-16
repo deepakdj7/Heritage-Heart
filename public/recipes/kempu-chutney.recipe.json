@@ -1,0 +1,38 @@
+{
+  "id": "4eee9879-6f31-4db8-b15a-ba5b41d98666",
+  "title": "Kempu Chutney",
+  "kannadaTitle": "ಕೆಂಪು ಚಟ್ನಿ",
+  "description": "Zesty and punchy Karnataka style red coconut chutney made with roasted Byadgi chillies, fried gram, and tamarind, tempered in hot coconut oil.",
+  "category": "Breakfast",
+  "cuisine": "Karnataka",
+  "prepTimeMinutes": 5,
+  "cookTimeMinutes": 10,
+  "servings": 6,
+  "difficulty": "Easy",
+  "ingredients": [
+    { "id": "ing-1", "name": "Dried red chillies (Byadagi/Guntur)", "amount": "4", "unit": "pcs" },
+    { "id": "ing-2", "name": "Huri kadale (roasted gram / putani)", "amount": "3", "unit": "tbsp" },
+    { "id": "ing-3", "name": "Grated fresh coconut", "amount": "0.5", "unit": "cup" },
+    { "id": "ing-4", "name": "Tamarind", "amount": "0.5", "unit": "tbsp" },
+    { "id": "ing-5", "name": "Coconut oil, mustard seeds, jeera, hing, curry leaves", "amount": "For tempering", "unit": "" },
+    { "id": "ing-6", "name": "Salt to taste", "amount": "To taste", "unit": "" }
+  ],
+  "steps": [
+    { "id": "step-1", "stepNumber": 1, "instruction": "Gently dry-roast red chillies and huri kadale on low heat until warm and fragrant." },
+    { "id": "step-2", "stepNumber": 2, "instruction": "Grind in a blender with grated coconut, tamarind, salt, and water to a thick spreadable chutney." },
+    { "id": "step-3", "stepNumber": 3, "instruction": "Temper with hot coconut oil, mustard seeds, jeera, asafoetida (hing), and fresh curry leaves." }
+  ],
+  "storyOrOrigin": "The quintessential red chutney that elevates crispy dosas, idlis, and paddus across Karnataka breakfast stalls.",
+  "grandmasSecrets": [
+    "Using a mix of Byadgi chillies for bright red color and Guntur chillies for heat gives the best balance."
+  ],
+  "tags": ["Chutney", "Breakfast", "Karnataka", "Dosa Chutney"],
+  "imageUrl": "https://www.indianveggiedelight.com/wp-content/uploads/2018/03/red-coconut-chutney-featured.jpg",
+  "authorId": "family-vault",
+  "authorName": "Deepak DJ's Kitchen",
+  "createdAt": "2026-04-29T03:08:13.623Z",
+  "updatedAt": "2026-04-29T03:08:13.623Z",
+  "isPublic": true,
+  "sharedWithEmails": [],
+  "forkCount": 0
+}

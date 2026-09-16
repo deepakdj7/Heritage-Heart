@@ -1,0 +1,40 @@
+{
+  "id": "443b7513-639b-4af8-95dd-340d2fa3b290",
+  "title": "Chammanthi",
+  "kannadaTitle": "ತೆಂಗಿನಕಾಯಿ ಚಮ್ಮಂತಿ",
+  "description": "Authentic Kerala rustic dry coconut chutney, coarsely ground with small shallots, dried red chillies, garlic, curry leaves, and fragrant coconut oil tempering.",
+  "category": "Breakfast",
+  "cuisine": "Kerala",
+  "prepTimeMinutes": 5,
+  "cookTimeMinutes": 10,
+  "servings": 6,
+  "difficulty": "Easy",
+  "ingredients": [
+    { "id": "ing-1", "name": "Fresh grated coconut", "amount": "1", "unit": "cup" },
+    { "id": "ing-2", "name": "Small shallots / sambar onions", "amount": "6", "unit": "pcs" },
+    { "id": "ing-3", "name": "Dried red chillies", "amount": "6", "unit": "pcs" },
+    { "id": "ing-4", "name": "Garlic cloves", "amount": "10", "unit": "cloves" },
+    { "id": "ing-5", "name": "Curry leaves", "amount": "10", "unit": "leaves" },
+    { "id": "ing-6", "name": "Cold-pressed coconut oil", "amount": "1", "unit": "tbsp" },
+    { "id": "ing-7", "name": "Jeera (cumin seeds)", "amount": "1", "unit": "tbsp" },
+    { "id": "ing-8", "name": "Salt to taste", "amount": "To taste", "unit": "" }
+  ],
+  "steps": [
+    { "id": "step-1", "stepNumber": 1, "instruction": "Blitz small onions, dried red chillies, garlic cloves, curry leaves, and salt in a dry chutney jar." },
+    { "id": "step-2", "stepNumber": 2, "instruction": "Add the fresh grated coconut and pulse briefly — keep it very coarse and dry without turning into a wet paste." },
+    { "id": "step-3", "stepNumber": 3, "instruction": "In a small pan, heat pure coconut oil, crackle jeera, and pour hot tempering over the ground chammanthi." }
+  ],
+  "storyOrOrigin": "A staple comfort food of Kerala homes, paired with hot kanji (rice gruel), kappa, or crispy dosas.",
+  "grandmasSecrets": [
+    "Do not add water while grinding. Pulsing dry yields that distinct, rustic texture."
+  ],
+  "tags": ["Kerala", "Coconut", "Chutney", "Comfort Food"],
+  "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHsjsUktcDPTKjqUborPFwVnE0fLQjk5eOVNAxEyN1sgGNEqfbMyOZIcI&s=10",
+  "authorId": "family-vault",
+  "authorName": "Deepak DJ's Kitchen",
+  "createdAt": "2026-04-28T13:35:49.959Z",
+  "updatedAt": "2026-04-28T13:35:49.959Z",
+  "isPublic": true,
+  "sharedWithEmails": [],
+  "forkCount": 0
+}

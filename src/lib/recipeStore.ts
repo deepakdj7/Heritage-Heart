@@ -27,9 +27,14 @@ export function subscribeToRealtimeRecipes(
     const recipesRef = collection(db, RECIPES_COLLECTION);
     const q = query(recipesRef, orderBy('createdAt', 'desc'));
 
-    // Clean up legacy starter recipes from Firestore if present
-    const legacyIds = ['bisi-bele-bath-traditional', 'akki-roti-davangere', 'mysore-pak-soft-melt', 'maddur-vada-crisp'];
-    legacyIds.forEach((id) => {
+    // Clean up starter and seed recipes from Firestore if present
+    const seedIds = [
+      'bisi-bele-bath-traditional', 'akki-roti-davangere', 'mysore-pak-soft-melt', 'maddur-vada-crisp',
+      'seed-kajjayya-001', 'seed-masala-puri-002', 'seed-7-cup-burfi-003', 'seed-chammanthi-004',
+      'seed-akki-rotti-005', 'seed-kempu-chutney-006', 'seed-maavinkai-appe-huli-007', 'seed-kodbale-008',
+      'seed-shankarapali-009', 'seed-lemon-pickle-010'
+    ];
+    seedIds.forEach((id) => {
       deleteDoc(doc(db, RECIPES_COLLECTION, id)).catch(() => {});
     });
 
@@ -43,7 +48,7 @@ export function subscribeToRealtimeRecipes(
           const list: Recipe[] = [];
           snapshot.forEach((docSnap) => {
             const data = docSnap.data() as Recipe;
-            if (!legacyIds.includes(docSnap.id)) {
+            if (!seedIds.includes(docSnap.id) && !docSnap.id.startsWith('seed-')) {
               list.push({ id: docSnap.id, ...data });
             }
           });
@@ -59,7 +64,7 @@ export function subscribeToRealtimeRecipes(
           try {
             const parsed = JSON.parse(localStored);
             const userRecipes = parsed.filter(
-              (r: Recipe) => !legacyIds.includes(r.id)
+              (r: Recipe) => !seedIds.includes(r.id) && !r.id.startsWith('seed-')
             );
             onUpdate(userRecipes);
             return;

@@ -5,29 +5,22 @@ const DRIVE_FOLDER_NAME = 'Heritage & Heart Recipes';
 
 /**
  * Ensures the dedicated "Heritage & Heart Recipes" folder exists in the user's Google Drive.
+ * Searches flexibly for any existing folder named "Heritage & Heart", "Heritage and Heart", etc.
  */
 export async function getOrCreateCookbookFolder(accessToken: string): Promise<string> {
-  // 1. Search for existing folder
-  // Note: with drive.file scope, searching by name or querying files created by this app
-  const query = encodeURIComponent(`mimeType = 'application/vnd.google-apps.folder' and name = '${DRIVE_FOLDER_NAME}' and trashed = false`);
-  const searchUrl = `https://www.googleapis.com/drive/v3/files?q=${query}&spaces=drive&fields=files(id, name)`;
+  // 1. Search for existing folder with flexible search
+  const query = encodeURIComponent(`mimeType = 'application/vnd.google-apps.folder' and trashed = false and (name = '${DRIVE_FOLDER_NAME}' or name contains 'Heritage & Heart' or name contains 'Heritage and Heart')`);
+  const searchUrl = `https://www.googleapis.com/drive/v3/files?q=${query}&spaces=drive&fields=files(id, name, createdTime)&orderBy=createdTime`;
   
   const searchRes = await fetch(searchUrl, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
-  if (!searchRes.ok) {
-    const errText = await searchRes.text();
-    if (searchRes.status === 401 || searchRes.status === 403) {
-      localStorage.removeItem('google_drive_access_token');
-      localStorage.removeItem('google_drive_token_timestamp');
+  if (searchRes.ok) {
+    const data = await searchRes.json();
+    if (data.files && data.files.length > 0) {
+      return data.files[0].id;
     }
-    throw new Error(`Failed to query Google Drive folder: ${errText}`);
-  }
-
-  const data = await searchRes.json();
-  if (data.files && data.files.length > 0) {
-    return data.files[0].id;
   }
 
   // 2. Create the folder if not found
@@ -142,53 +135,233 @@ export async function saveRecipeToGoogleDrive(recipe: Recipe): Promise<{ fileId:
   };
 }
 
+// Helper to safely normalize recipes loaded from Drive
+function normalizeDriveRecipe(
+  raw: any, 
+  fileId: string, 
+  webViewLink: string, 
+  currentUserUid?: string, 
+  currentUserEmail?: string
+): Recipe | null {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const title = raw.title || raw.recipeTitle || raw.name || '';
+  if (!title) return null;
+
+  // Normalize ingredients: supports string[], RecipeIngredient[], or { item, quantity }
+  let ingredients: any[] = [];
+  const rawIngs = raw.ingredients || raw.ingredientList || [];
+  if (Array.isArray(rawIngs)) {
+    ingredients = rawIngs.map((item: any, idx: number) => {
+      if (typeof item === 'string') {
+        return {
+          id: `ing-${idx + 1}`,
+          name: item,
+          amount: '',
+          unit: '',
+        };
+      }
+      return {
+        id: item.id || `ing-${idx + 1}`,
+        name: item.name || item.item || '',
+        amount: item.amount || item.quantity || '',
+        unit: item.unit || '',
+        notes: item.notes,
+      };
+    });
+  }
+
+  // Normalize steps: supports string[] or RecipeStep[]
+  let steps: any[] = [];
+  const rawSteps = raw.steps || raw.instructions || raw.method || [];
+  if (Array.isArray(rawSteps)) {
+    steps = rawSteps.map((step: any, idx: number) => {
+      if (typeof step === 'string') {
+        return {
+          id: `step-${idx + 1}`,
+          stepNumber: idx + 1,
+          instruction: step,
+        };
+      }
+      return {
+        id: step.id || `step-${idx + 1}`,
+        stepNumber: step.stepNumber || idx + 1,
+        instruction: step.instruction || step.step || step.text || '',
+        durationMinutes: step.durationMinutes,
+        tip: step.tip,
+      };
+    });
+  }
+
+  // Normalize grandmasSecrets: supports array or string
+  let grandmasSecrets: string[] = [];
+  if (Array.isArray(raw.grandmasSecrets)) {
+    grandmasSecrets = raw.grandmasSecrets;
+  } else if (Array.isArray(raw.tips)) {
+    grandmasSecrets = raw.tips;
+  } else if (typeof raw.tips === 'string') {
+    grandmasSecrets = raw.tips.split('\n').map((t: string) => t.trim()).filter(Boolean);
+  } else if (typeof raw.grandmasSecrets === 'string') {
+    grandmasSecrets = (raw.grandmasSecrets as string).split('\n').map((t: string) => t.trim()).filter(Boolean);
+  }
+
+  // Category normalization
+  const validCategories = ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snacks', 'Beverages', 'Heirloom Classics', 'Festive'];
+  let category = raw.category;
+  if (!validCategories.includes(category)) {
+    category = 'Heirloom Classics';
+  }
+
+  let servings = 4;
+  if (typeof raw.servings === 'number') {
+    servings = raw.servings;
+  } else if (typeof raw.servings === 'string') {
+    const matched = raw.servings.match(/\d+/);
+    if (matched) servings = parseInt(matched[0], 10);
+  } else if (typeof raw.yieldText === 'string') {
+    const matched = raw.yieldText.match(/\d+/);
+    if (matched) servings = parseInt(matched[0], 10);
+  }
+
+  // Tags
+  let tags: string[] = ['Heirloom'];
+  if (Array.isArray(raw.tags) && raw.tags.length > 0) {
+    tags = raw.tags;
+  } else if (typeof raw.tags === 'string') {
+    tags = raw.tags.split(',').map((s: string) => s.trim()).filter(Boolean);
+  }
+
+  return {
+    id: raw.id || `recipe-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    title,
+    kannadaTitle: raw.kannadaTitle || raw.kannada_title || raw.regionalTitle,
+    description: raw.description || 'A cherished family recipe.',
+    category: category as any,
+    cuisine: raw.cuisine || 'Traditional Indian',
+    prepTimeMinutes: typeof raw.prepTimeMinutes === 'number' ? raw.prepTimeMinutes : (typeof raw.prepTime === 'number' ? raw.prepTime : 15),
+    cookTimeMinutes: typeof raw.cookTimeMinutes === 'number' ? raw.cookTimeMinutes : (typeof raw.cookTime === 'number' ? raw.cookTime : 30),
+    servings,
+    difficulty: raw.difficulty || 'Intermediate',
+    ingredients: ingredients.length > 0 ? ingredients : [{ id: '1', name: 'Traditional ingredients', amount: '', unit: '' }],
+    steps: steps.length > 0 ? steps : [{ id: '1', stepNumber: 1, instruction: 'Prepare according to tradition.' }],
+    storyOrOrigin: raw.storyOrOrigin || raw.origin || raw.story,
+    grandmasSecrets,
+    tags,
+    imageUrl: raw.imageUrl || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=1000&q=80',
+    authorId: currentUserUid || raw.authorId || 'family-vault',
+    authorName: raw.authorName || 'Family Chef',
+    authorEmail: raw.authorEmail || currentUserEmail,
+    authorPhoto: raw.authorPhoto,
+    createdAt: raw.createdAt || raw.updatedAt || new Date().toISOString(),
+    updatedAt: raw.updatedAt || new Date().toISOString(),
+    isPublic: raw.isPublic ?? true,
+    sharedWithEmails: Array.isArray(raw.sharedWithEmails) ? raw.sharedWithEmails : [],
+    forkCount: raw.forkCount || 0,
+    driveFileId: fileId,
+    driveWebLink: webViewLink,
+    driveSyncedAt: new Date().toISOString(),
+  };
+}
+
 /**
- * Loads all recipe JSON files stored in the user's Google Drive folder.
+ * Loads all recipe JSON files stored in the user's Google Drive.
+ * Automatically discovers recipes inside dedicated folders or anywhere in Drive.
  */
-export async function loadRecipesFromGoogleDrive(): Promise<Recipe[]> {
+export async function loadRecipesFromGoogleDrive(currentUserUid?: string, currentUserEmail?: string): Promise<Recipe[]> {
   const token = getStoredDriveAccessToken();
   if (!token) return [];
 
   try {
-    const folderId = await getOrCreateCookbookFolder(token);
-    const query = encodeURIComponent(`'${folderId}' in parents and trashed = false and name contains '.recipe.json'`);
-    const listUrl = `https://www.googleapis.com/drive/v3/files?q=${query}&spaces=drive&fields=files(id, name, modifiedTime, webViewLink)`;
+    const filesToFetch = new Map<string, { id: string; name: string; webViewLink?: string }>();
 
-    const res = await fetch(listUrl, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    // 1. Check for any folders named "Heritage", "Recipes", or "Cookbook"
+    try {
+      const folderQuery = encodeURIComponent(`mimeType = 'application/vnd.google-apps.folder' and trashed = false and (name contains 'Heritage' or name contains 'Recipes' or name contains 'Cookbook' or name contains 'recipe')`);
+      const folderUrl = `https://www.googleapis.com/drive/v3/files?q=${folderQuery}&spaces=drive&fields=files(id, name)`;
+      const folderRes = await fetch(folderUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    if (!res.ok) {
-      if (res.status === 401 || res.status === 403) {
-        localStorage.removeItem('google_drive_access_token');
-        localStorage.removeItem('google_drive_token_timestamp');
+      if (folderRes.ok) {
+        const folderData = await folderRes.json();
+        const folders = folderData.files || [];
+        for (const f of folders) {
+          try {
+            // Find all json files inside each matching folder
+            const inFolderQuery = encodeURIComponent(`'${f.id}' in parents and trashed = false and (name contains '.json' or mimeType = 'application/json' or mimeType = 'text/plain')`);
+            const inFolderUrl = `https://www.googleapis.com/drive/v3/files?q=${inFolderQuery}&spaces=drive&fields=files(id, name, webViewLink)`;
+            const inFolderRes = await fetch(inFolderUrl, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (inFolderRes.ok) {
+              const inFolderData = await inFolderRes.json();
+              (inFolderData.files || []).forEach((file: any) => {
+                filesToFetch.set(file.id, file);
+              });
+            }
+          } catch (e) {
+            console.warn(`Error listing files in folder ${f.name}:`, e);
+          }
+        }
       }
-      console.warn('Drive list files error:', await res.text());
+    } catch (e) {
+      console.warn('Folder scanning warning:', e);
+    }
+
+    // 2. Also search Drive directly for any recipe JSON files
+    try {
+      const directQuery = encodeURIComponent(`trashed = false and (name contains '.recipe.json' or name contains '.recipe' or (name contains '.json' and (name contains 'kajjayya' or name contains 'puri' or name contains 'burfi' or name contains 'chammanthi' or name contains 'rotti' or name contains 'chutney' or name contains 'appe' or name contains 'kodbale' or name contains 'shankarapali' or name contains 'pickle' or name contains 'recipe' or name contains 'heritage')))` );
+      const directUrl = `https://www.googleapis.com/drive/v3/files?q=${directQuery}&spaces=drive&fields=files(id, name, webViewLink)`;
+      const directRes = await fetch(directUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (directRes.ok) {
+        const directData = await directRes.json();
+        (directData.files || []).forEach((file: any) => {
+          filesToFetch.set(file.id, file);
+        });
+      }
+    } catch (e) {
+      console.warn('Direct file scan warning:', e);
+    }
+
+    if (filesToFetch.size === 0) {
+      console.log('No recipe files discovered in Google Drive.');
       return [];
     }
 
-    const { files } = await res.json();
-    if (!files || files.length === 0) return [];
-
     const recipes: Recipe[] = [];
-    for (const file of files) {
+    for (const [fileId, file] of filesToFetch.entries()) {
       try {
-        const fileContentUrl = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`;
+        const fileContentUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
         const contentRes = await fetch(fileContentUrl, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         if (contentRes.ok) {
-          const raw = await contentRes.json();
-          recipes.push({
-            ...raw,
-            driveFileId: file.id,
-            driveWebLink: file.webViewLink || `https://drive.google.com/file/d/${file.id}/view`,
-          });
+          const rawText = await contentRes.text();
+          // Clean possible BOM or leading/trailing whitespace
+          const cleanText = rawText.replace(/^\uFEFF/, '').trim();
+          if (!cleanText) continue;
+
+          const parsed = JSON.parse(cleanText);
+          const link = file.webViewLink || `https://drive.google.com/file/d/${fileId}/view`;
+
+          if (Array.isArray(parsed)) {
+            for (const item of parsed) {
+              const normalized = normalizeDriveRecipe(item, fileId, link, currentUserUid, currentUserEmail);
+              if (normalized) recipes.push(normalized);
+            }
+          } else {
+            const normalized = normalizeDriveRecipe(parsed, fileId, link, currentUserUid, currentUserEmail);
+            if (normalized) recipes.push(normalized);
+          }
         }
       } catch (err) {
-        console.error(`Failed to read Drive recipe ${file.id}:`, err);
+        console.error(`Failed to read/parse Drive recipe ${file.name} (${fileId}):`, err);
       }
     }
+
     return recipes;
   } catch (error) {
     console.error('Error fetching recipes from Google Drive:', error);
