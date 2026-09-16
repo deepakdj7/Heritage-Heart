@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Plus, 
@@ -14,6 +14,7 @@ interface RecipeFormModalProps {
   onSave: (recipe: Recipe) => void;
   currentUser: User | null;
   hasDriveAccess: boolean;
+  initialRecipe?: Recipe | null;
 }
 
 export const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
@@ -21,10 +22,9 @@ export const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   onClose,
   onSave,
   currentUser,
+  initialRecipe,
 }) => {
-  if (!isOpen) return null;
-
-  // Clean initial state with NO prefilled dummy values — only placeholders
+  // Form states
   const [title, setTitle] = useState('');
   const [kannadaTitle, setKannadaTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -45,6 +45,51 @@ export const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   const [steps, setSteps] = useState<RecipeStep[]>([
     { id: '1', stepNumber: 1, instruction: '', tip: '' },
   ]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (initialRecipe) {
+      setTitle(initialRecipe.title || '');
+      setKannadaTitle(initialRecipe.kannadaTitle || '');
+      setDescription(initialRecipe.description || '');
+      setCategory(initialRecipe.category || 'Heirloom Classics');
+      setCuisine(initialRecipe.cuisine || '');
+      setPrepTimeMinutes(initialRecipe.prepTimeMinutes ? String(initialRecipe.prepTimeMinutes) : '');
+      setCookTimeMinutes(initialRecipe.cookTimeMinutes ? String(initialRecipe.cookTimeMinutes) : '');
+      setServings(initialRecipe.servings ? String(initialRecipe.servings) : '');
+      setDifficulty(initialRecipe.difficulty || 'Intermediate');
+      setStoryOrOrigin(initialRecipe.storyOrOrigin || '');
+      setImageUrl(initialRecipe.imageUrl || '');
+      setGrandmaSecrets(initialRecipe.grandmasSecrets?.length ? initialRecipe.grandmasSecrets : ['']);
+      setIngredients(
+        initialRecipe.ingredients?.length
+          ? initialRecipe.ingredients
+          : [{ id: '1', name: '', amount: '', unit: '', notes: '' }]
+      );
+      setSteps(
+        initialRecipe.steps?.length
+          ? initialRecipe.steps
+          : [{ id: '1', stepNumber: 1, instruction: '', tip: '' }]
+      );
+    } else {
+      setTitle('');
+      setKannadaTitle('');
+      setDescription('');
+      setCategory('Heirloom Classics');
+      setCuisine('');
+      setPrepTimeMinutes('');
+      setCookTimeMinutes('');
+      setServings('');
+      setDifficulty('Intermediate');
+      setStoryOrOrigin('');
+      setImageUrl('');
+      setGrandmaSecrets(['']);
+      setIngredients([{ id: '1', name: '', amount: '', unit: '', notes: '' }]);
+      setSteps([{ id: '1', stepNumber: 1, instruction: '', tip: '' }]);
+    }
+  }, [isOpen, initialRecipe]);
+
+  if (!isOpen) return null;
 
   // Ingredient Helpers
   const addIngredient = () => {
@@ -113,8 +158,9 @@ export const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
     const validSteps = steps.filter(s => s.instruction.trim().length > 0);
     const validSecrets = grandmaSecrets.filter(s => s.trim().length > 0);
 
-    const newRecipe: Recipe = {
-      id: `recipe-${Date.now()}`,
+    const recipeToSave: Recipe = {
+      ...(initialRecipe || {}),
+      id: initialRecipe ? initialRecipe.id : `recipe-${Date.now()}`,
       title: title.trim(),
       kannadaTitle: kannadaTitle.trim() || undefined,
       description: description.trim() || 'A cherished family recipe.',
@@ -128,20 +174,23 @@ export const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
       steps: validSteps.length > 0 ? validSteps : [{ id: '1', stepNumber: 1, instruction: 'Prepare according to tradition.' }],
       storyOrOrigin: storyOrOrigin.trim() || undefined,
       grandmasSecrets: validSecrets,
-      tags: ['Heirloom', 'Family'],
-      imageUrl: imageUrl.trim() || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=1000&q=80',
-      authorId: currentUser?.uid || 'guest-author',
-      authorName: currentUser?.displayName || 'Family Chef',
-      authorEmail: currentUser?.email || 'chef@recipevault.internal',
-      authorPhoto: currentUser?.photoURL || undefined,
-      createdAt: new Date().toISOString(),
+      tags: initialRecipe?.tags || ['Heirloom', 'Family'],
+      imageUrl: imageUrl.trim() || initialRecipe?.imageUrl || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=1000&q=80',
+      authorId: initialRecipe ? initialRecipe.authorId : (currentUser?.uid || 'guest-author'),
+      authorName: initialRecipe ? initialRecipe.authorName : (currentUser?.displayName || 'Family Chef'),
+      authorEmail: initialRecipe ? initialRecipe.authorEmail : (currentUser?.email || 'chef@recipevault.internal'),
+      authorPhoto: initialRecipe ? initialRecipe.authorPhoto : (currentUser?.photoURL || undefined),
+      createdAt: initialRecipe ? initialRecipe.createdAt : new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      isPublic: true,
-      sharedWithEmails: [],
-      forkCount: 0,
+      isPublic: initialRecipe ? initialRecipe.isPublic : true,
+      sharedWithEmails: initialRecipe?.sharedWithEmails || [],
+      forkCount: initialRecipe?.forkCount || 0,
+      driveFileId: initialRecipe?.driveFileId,
+      driveWebLink: initialRecipe?.driveWebLink,
+      driveSyncedAt: initialRecipe?.driveSyncedAt,
     };
 
-    onSave(newRecipe);
+    onSave(recipeToSave);
     onClose();
   };
 
@@ -155,10 +204,10 @@ export const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
         <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">
-              New Recipe
+              {initialRecipe ? 'Edit Recipe' : 'New Recipe'}
             </h2>
             <p className="text-xs text-neutral-500">
-              Record ingredients, methods, and family notes
+              {initialRecipe ? 'Update ingredients, methods, and notes' : 'Record ingredients, methods, and family notes'}
             </p>
           </div>
           <button

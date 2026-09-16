@@ -47,6 +47,7 @@ export default function App() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [sharingRecipe, setSharingRecipe] = useState<Recipe | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   
   // Status feedback
   const [isSyncingDrive, setIsSyncingDrive] = useState(false);
@@ -106,10 +107,11 @@ export default function App() {
     showNotice('Signed out successfully', 'info');
   };
 
-  // Handler: Save / Create Recipe
+  // Handler: Save / Create / Edit Recipe
   const handleSaveRecipe = async (recipe: Recipe) => {
+    const isEdit = !!editingRecipe;
     await saveRecipeRealtime(recipe);
-    showNotice(`"${recipe.title}" added to your heirloom cookbook!`, 'success');
+    showNotice(isEdit ? `"${recipe.title}" updated!` : `"${recipe.title}" added to your heirloom cookbook!`, 'success');
 
     // If user is connected to Google Drive, automatically back up to their Drive
     if (hasDriveToken && currentUser) {
@@ -127,6 +129,7 @@ export default function App() {
         console.warn('Drive auto-sync notice:', err);
       }
     }
+    setEditingRecipe(null);
   };
 
   // Handler: Manual Drive Sync for a specific recipe
@@ -333,51 +336,17 @@ export default function App() {
       {/* Hero Welcome Banner */}
       <section className="bg-white border-b border-neutral-200/70 pt-8 pb-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 mb-3">
-                <Sparkles className="w-3.5 h-3.5 text-neutral-600" />
-                <span>Heirloom Recipes</span>
-              </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-900">
-                Heritage &amp; Heart
-              </h1>
-              <p className="mt-2 text-sm sm:text-base text-neutral-600 max-w-2xl leading-relaxed">
-                Preserve treasured family recipes, handwritten memories, and grandmother's culinary wisdom. 
-                Seamlessly backed up in your personal Google Drive and updated live in real time.
-              </p>
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-neutral-600" />
+              <span>Heirloom Recipes</span>
             </div>
-
-            {/* Quick Summary Pill / Drive Callout */}
-            <div className="bg-neutral-50 p-4 rounded-2xl border border-neutral-200 shadow-2xs flex items-center gap-3.5 shrink-0">
-              <div className="w-11 h-11 rounded-xl bg-neutral-200/70 text-neutral-800 flex items-center justify-center">
-                <Cloud className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-neutral-900">
-                  {currentUser ? (hasDriveToken ? 'Google Drive Connected' : 'Google Signed In') : 'Sync with Google Drive'}
-                </p>
-                <p className="text-[11px] text-neutral-500">
-                  {currentUser ? (hasDriveToken ? 'Recipes backed to Drive' : 'Click to enable Drive backup') : 'Sign in to save recipes to your Drive'}
-                </p>
-                {!currentUser ? (
-                  <button
-                    onClick={handleSignIn}
-                    className="mt-1 text-xs text-neutral-900 font-semibold hover:underline"
-                  >
-                    Connect Account →
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleFullDriveSync}
-                    disabled={isSyncingDrive}
-                    className="mt-1 text-xs text-neutral-900 font-semibold hover:underline flex items-center gap-1"
-                  >
-                    {isSyncingDrive ? 'Syncing...' : 'Sync Vault Now ↻'}
-                  </button>
-                )}
-              </div>
-            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-900">
+              Heritage &amp; Heart
+            </h1>
+            <p className="mt-2 text-sm sm:text-base text-neutral-600 max-w-2xl leading-relaxed">
+              Preserve heirloom family recipes, handwritten memories, and culinary wisdom. Backed up in your personal Google Drive.
+            </p>
           </div>
 
           {/* Category Filter Pills */}
@@ -468,7 +437,10 @@ export default function App() {
       {/* Floating Action Button (FAB) for Adding Recipe */}
       <button
         id="fab-add-recipe"
-        onClick={() => setIsCreateModalOpen(true)}
+        onClick={() => {
+          setEditingRecipe(null);
+          setIsCreateModalOpen(true);
+        }}
         aria-label="Add Recipe"
         className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3.5 sm:px-5 sm:py-3.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer active:scale-95 group"
       >
@@ -482,10 +454,10 @@ export default function App() {
           <div className="flex items-center gap-2 font-medium text-neutral-700">
             <span>Heritage &amp; Heart</span>
             <span>•</span>
-            <span className="text-neutral-500 font-normal">Cookbook</span>
+            <span className="text-neutral-500 font-normal">Created with ❤️ by Deepak DJ</span>
           </div>
           <p className="text-[11px] text-neutral-400">
-            Google Drive Storage &amp; Cloud Synchronization.
+            GDrive Storage &amp; Sync
           </p>
         </div>
       </footer>
@@ -494,6 +466,11 @@ export default function App() {
       <RecipeDetailModal
         recipe={selectedRecipe}
         onClose={() => setSelectedRecipe(null)}
+        onEdit={(r) => {
+          setEditingRecipe(r);
+          setSelectedRecipe(null);
+          setIsCreateModalOpen(true);
+        }}
         onFork={(r) => handleForkRecipe(r)}
         onShare={(r) => setSharingRecipe(r)}
         onDelete={(id) => handleDeleteRecipe(id)}
@@ -511,10 +488,14 @@ export default function App() {
 
       <RecipeFormModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setEditingRecipe(null);
+        }}
         onSave={handleSaveRecipe}
         currentUser={currentUser}
         hasDriveAccess={hasDriveToken}
+        initialRecipe={editingRecipe}
       />
 
       {/* Mandatory sign in / sign up modal */}

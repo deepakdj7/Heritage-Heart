@@ -121,10 +121,10 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onSyncDrive}
                 disabled={isSyncingDrive}
                 title="Sync recipes with Google Drive"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-700 transition-colors"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-700 transition-colors cursor-pointer"
               >
                 <Cloud className="w-3.5 h-3.5 text-neutral-600" />
-                <span>{isSyncingDrive ? 'Syncing...' : 'Google Drive'}</span>
+                <span>{isSyncingDrive ? 'Syncing...' : 'Sync now'}</span>
                 {isSyncingDrive && <RefreshCw className="w-3 h-3 animate-spin ml-1 text-neutral-600" />}
               </button>
             )}
@@ -212,7 +212,7 @@ export const Header: React.FC<HeaderProps> = ({
                 className="text-left px-3 py-2 rounded-lg text-sm text-neutral-800 font-medium flex items-center gap-2 bg-neutral-50 hover:bg-neutral-100"
               >
                 <Cloud className="w-4 h-4" />
-                Sync with Google Drive
+                Sync now
               </button>
             )}
           </div>

@@ -10,7 +10,8 @@ import {
   Trash2, 
   ExternalLink,
   BookOpen,
-  Info
+  Info,
+  Edit3
 } from 'lucide-react';
 import { Recipe } from '../types';
 
@@ -19,6 +20,7 @@ interface RecipeDetailModalProps {
   onClose: () => void;
   onFork: (recipe: Recipe) => void;
   onShare: (recipe: Recipe) => void;
+  onEdit?: (recipe: Recipe) => void;
   onDelete?: (recipeId: string) => void;
   onSaveToDrive?: (recipe: Recipe) => void;
   isSavingToDrive?: boolean;
@@ -31,6 +33,7 @@ export const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
   onClose,
   onFork,
   onShare,
+  onEdit,
   onDelete,
   onSaveToDrive,
   isSavingToDrive,
@@ -66,6 +69,17 @@ export const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
             >
               <Cloud className="w-3.5 h-3.5 text-neutral-600" />
               <span>{isSavingToDrive ? 'Backing up...' : recipe.driveFileId ? 'Drive Backed' : 'Backup to Drive'}</span>
+            </button>
+          )}
+
+          {/* Edit Button */}
+          {isAuthor && onEdit && (
+            <button
+              onClick={() => onEdit(recipe)}
+              className="px-3 py-1.5 bg-white/95 hover:bg-white text-neutral-800 backdrop-blur-xs rounded-full text-xs font-medium shadow-xs flex items-center gap-1.5 transition-colors border border-neutral-200 cursor-pointer"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-neutral-600" />
+              <span>Edit</span>
             </button>
           )}
 
@@ -288,20 +302,31 @@ export const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
 
             {/* Bottom Actions */}
             <div className="pt-4 border-t border-neutral-200 flex items-center justify-between">
-              {isAuthor && onDelete ? (
-                <button
-                  onClick={() => {
-                    if (confirm('Are you sure you want to delete this recipe?')) {
-                      onDelete(recipe.id);
-                      onClose();
-                    }
-                  }}
-                  className="px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Delete Recipe</span>
-                </button>
-              ) : <div />}
+              <div className="flex items-center gap-2">
+                {isAuthor && onEdit && (
+                  <button
+                    onClick={() => onEdit(recipe)}
+                    className="px-3 py-2 text-xs font-medium text-neutral-800 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Edit3 className="w-4 h-4 text-neutral-600" />
+                    <span>Edit Recipe</span>
+                  </button>
+                )}
+                {isAuthor && onDelete && (
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this recipe?')) {
+                        onDelete(recipe.id);
+                        onClose();
+                      }
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete Recipe</span>
+                  </button>
+                )}
+              </div>
 
               <button
                 onClick={onClose}
