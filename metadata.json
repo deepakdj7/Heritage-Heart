@@ -1,0 +1,6 @@
+{
+  "name": "Heritage & Heart",
+  "description": "An heirloom recipe cookbook allowing cooks and families to preserve, organize, and share traditional recipes with Google Drive storage and real-time syncing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
