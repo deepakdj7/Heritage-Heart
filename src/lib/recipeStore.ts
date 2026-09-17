@@ -16,6 +16,24 @@ import { INITIAL_HEIRLOOM_RECIPES } from '../data/initialRecipes';
 const RECIPES_COLLECTION = 'heritage_recipes';
 
 /**
+ * Returns all currently cached recipes from local persistence immediately.
+ */
+export function getCachedRecipes(): Recipe[] {
+  try {
+    const raw = localStorage.getItem('heritage_recipes_backup');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Could not read cached recipes:', e);
+  }
+  return [];
+}
+
+/**
  * Subscribes in real-time to the entire cookbook collection.
  * Falls back safely to local storage or heirloom defaults if Firestore is not provisioned or offline.
  */
@@ -42,8 +60,13 @@ export function subscribeToRealtimeRecipes(
       q,
       (snapshot) => {
         if (snapshot.empty) {
-          localStorage.removeItem('heritage_recipes_backup');
-          onUpdate([]);
+          // If Firestore collection is empty, check if we have local cached recipes instead of blanking out
+          const cached = getCachedRecipes();
+          if (cached.length > 0) {
+            onUpdate(cached);
+          } else {
+            onUpdate([]);
+          }
         } else {
           const list: Recipe[] = [];
           snapshot.forEach((docSnap) => {
@@ -52,47 +75,41 @@ export function subscribeToRealtimeRecipes(
               list.push({ id: docSnap.id, ...data });
             }
           });
-          localStorage.setItem('heritage_recipes_backup', JSON.stringify(list));
-          onUpdate(list);
+
+          // Merge with any locally added recipes
+          const existing = getCachedRecipes();
+          const mergedMap = new Map<string, Recipe>();
+          existing.forEach((r) => mergedMap.set(r.id, r));
+          list.forEach((r) => mergedMap.set(r.id, r));
+          const mergedList = Array.from(mergedMap.values());
+
+          localStorage.setItem('heritage_recipes_backup', JSON.stringify(mergedList));
+          onUpdate(mergedList);
         }
       },
       (error) => {
-        console.warn('Firestore subscription fallback:', error);
+        console.warn('Firestore subscription fallback, using cached recipes:', error);
         if (onError) onError(error);
-        const localStored = localStorage.getItem('heritage_recipes_backup');
-        if (localStored) {
-          try {
-            const parsed = JSON.parse(localStored);
-            const userRecipes = parsed.filter(
-              (r: Recipe) => !seedIds.includes(r.id) && !r.id.startsWith('seed-')
-            );
-            onUpdate(userRecipes);
-            return;
-          } catch (e) {}
-        }
-        onUpdate([]);
+        const cached = getCachedRecipes();
+        onUpdate(cached);
       }
     );
 
     return unsubscribe;
   } catch (err) {
     console.error('Real-time setup error:', err);
-    onUpdate([]);
+    onUpdate(getCachedRecipes());
     return () => {};
   }
 }
 
 /**
- * Saves or updates a recipe in Firestore real-time collection.
+ * Saves or updates a recipe in Firestore real-time collection and local cache.
  */
 export async function saveRecipeRealtime(recipe: Recipe): Promise<void> {
+  // Always update local cache first so UI is immediately responsive & data is never lost
   try {
-    const docRef = doc(db, RECIPES_COLLECTION, recipe.id);
-    await setDoc(docRef, recipe, { merge: true });
-  } catch (e) {
-    console.warn('Firestore write warning, persisting locally:', e);
-    // Local persistence fallback
-    const current = JSON.parse(localStorage.getItem('heritage_recipes_backup') || '[]');
+    const current = getCachedRecipes();
     const index = current.findIndex((r: Recipe) => r.id === recipe.id);
     if (index >= 0) {
       current[index] = recipe;
@@ -100,6 +117,16 @@ export async function saveRecipeRealtime(recipe: Recipe): Promise<void> {
       current.unshift(recipe);
     }
     localStorage.setItem('heritage_recipes_backup', JSON.stringify(current));
+  } catch (e) {
+    console.warn('Local storage write warning:', e);
+  }
+
+  // Then persist to Firestore
+  try {
+    const docRef = doc(db, RECIPES_COLLECTION, recipe.id);
+    await setDoc(docRef, recipe, { merge: true });
+  } catch (e) {
+    console.warn('Firestore write warning, persisted locally:', e);
   }
 }
 

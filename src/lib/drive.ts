@@ -282,6 +282,10 @@ export async function loadRecipesFromGoogleDrive(currentUserUid?: string, curren
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      if (folderRes.status === 401) {
+        throw new Error('AUTH_TOKEN_EXPIRED: Google Drive access token has expired.');
+      }
+
       if (folderRes.ok) {
         const folderData = await folderRes.json();
         const folders = folderData.files || [];
@@ -293,18 +297,23 @@ export async function loadRecipesFromGoogleDrive(currentUserUid?: string, curren
             const inFolderRes = await fetch(inFolderUrl, {
               headers: { Authorization: `Bearer ${token}` },
             });
+            if (inFolderRes.status === 401) {
+              throw new Error('AUTH_TOKEN_EXPIRED: Google Drive access token has expired.');
+            }
             if (inFolderRes.ok) {
               const inFolderData = await inFolderRes.json();
               (inFolderData.files || []).forEach((file: any) => {
                 filesToFetch.set(file.id, file);
               });
             }
-          } catch (e) {
+          } catch (e: any) {
+            if (e?.message?.includes('AUTH_TOKEN_EXPIRED')) throw e;
             console.warn(`Error listing files in folder ${f.name}:`, e);
           }
         }
       }
-    } catch (e) {
+    } catch (e: any) {
+      if (e?.message?.includes('AUTH_TOKEN_EXPIRED')) throw e;
       console.warn('Folder scanning warning:', e);
     }
 
@@ -315,6 +324,9 @@ export async function loadRecipesFromGoogleDrive(currentUserUid?: string, curren
       const directRes = await fetch(directUrl, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (directRes.status === 401) {
+        throw new Error('AUTH_TOKEN_EXPIRED: Google Drive access token has expired.');
+      }
       if (directRes.ok) {
         const directData = await directRes.json();
         (directData.files || []).forEach((file: any) => {

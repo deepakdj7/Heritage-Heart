@@ -19,12 +19,20 @@ import {
   Download
 } from 'lucide-react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth, signInWithGoogleOAuth, logOut, getStoredDriveAccessToken } from './lib/firebase';
+import { 
+  auth, 
+  signInWithGoogleOAuth, 
+  logOut, 
+  getStoredDriveAccessToken,
+  isDriveTokenFresh,
+  checkAndEnforceSessionExpiry
+} from './lib/firebase';
 import { 
   subscribeToRealtimeRecipes, 
   saveRecipeRealtime, 
   deleteRecipeRealtime, 
-  forkRecipeToUser 
+  forkRecipeToUser,
+  getCachedRecipes
 } from './lib/recipeStore';
 import { saveRecipeToGoogleDrive, loadRecipesFromGoogleDrive } from './lib/drive';
 import { Recipe, ActiveTab } from './types';
@@ -41,7 +49,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [hasDriveToken, setHasDriveToken] = useState<boolean>(false);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>(() => getCachedRecipes());
   const [activeTab, setActiveTab] = useState<ActiveTab>('cookbook');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -70,19 +78,38 @@ export default function App() {
     setTimeout(() => setStatusNotification(null), 4500);
   };
 
-  // 1. Auth Listener: Sign-in is mandatory & Auto-sync on app open
+  // 1. Auth Listener: 30-day continuous login session & background Drive freshness check
   useEffect(() => {
+    // Enforce 30-day session window
+    const sessionActive = checkAndEnforceSessionExpiry();
+    if (!sessionActive) {
+      setCurrentUser(null);
+      setHasDriveToken(false);
+      setIsAuthLoading(false);
+      showNotice('Your 30-day session has concluded. Please sign in to reconnect.', 'info');
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
-      const token = getStoredDriveAccessToken();
-      const hasToken = !!token;
-      setHasDriveToken(hasToken);
       setIsAuthLoading(false);
 
-      // Auto-sync as soon as app opens if user has an active Drive token
-      if (user && hasToken && !autoSyncedRef.current) {
-        autoSyncedRef.current = true;
-        handleFullDriveSync(user);
+      if (user) {
+        // Record session start timestamp if not already tracked
+        if (!localStorage.getItem('auth_session_started_at')) {
+          localStorage.setItem('auth_session_started_at', Date.now().toString());
+        }
+
+        const fresh = isDriveTokenFresh();
+        setHasDriveToken(fresh);
+
+        // Auto-sync in background on open if Drive token is fresh
+        if (fresh && !autoSyncedRef.current) {
+          autoSyncedRef.current = true;
+          handleFullDriveSync(user, false /* isManual = false: silent on load */);
+        }
+      } else {
+        setHasDriveToken(false);
       }
     });
     return () => unsubscribe();
@@ -116,7 +143,7 @@ export default function App() {
       setHasDriveToken(!!res.accessToken);
       showNotice(`Signed in as ${res.user.displayName || res.user.email}. Syncing recipes with Google Drive...`, 'info');
       // Immediately run full Drive sync on login!
-      await handleFullDriveSync(res.user);
+      await handleFullDriveSync(res.user, true);
     } catch (err: any) {
       console.error(err);
       showNotice(err.message || 'Authentication failed', 'error');
@@ -127,9 +154,10 @@ export default function App() {
 
   const handleSignOut = async () => {
     await logOut();
+    setCurrentUser(null);
     setHasDriveToken(false);
     autoSyncedRef.current = false;
-    showNotice('Signed out successfully', 'info');
+    showNotice('Signed out successfully. Recipes remain preserved on this device.', 'info');
   };
 
   // Handler: Save / Create / Edit Recipe
@@ -186,18 +214,29 @@ export default function App() {
   };
 
   // Handler: Sync entire cookbook collection to Google Drive & Pull from Drive
-  const handleFullDriveSync = async (providedUser?: User | null) => {
-    const token = getStoredDriveAccessToken();
-    if (!token) {
-      handleSignIn();
-      return;
-    }
-
+  const handleFullDriveSync = async (providedUser?: User | null, isManual: boolean = true) => {
     const activeUser = providedUser !== undefined ? providedUser : currentUser;
+    const token = getStoredDriveAccessToken();
+    const isFresh = isDriveTokenFresh();
+
+    // If manual sync requested and token is missing or expired, prompt re-authentication
+    if (!token || !isFresh) {
+      if (isManual) {
+        showNotice('Reconnecting with Google Drive to refresh session...', 'info');
+        await handleSignIn();
+        return;
+      } else {
+        // Automatic background sync should gracefully degrade if Drive token expired
+        setHasDriveToken(false);
+        return;
+      }
+    }
 
     try {
       setIsSyncingDrive(true);
-      showNotice('Syncing recipes with your Google Drive folder...', 'info');
+      if (isManual) {
+        showNotice('Syncing recipes with your Google Drive folder...', 'info');
+      }
 
       // 1. Fetch any recipes existing in Google Drive FIRST
       const driveFiles = await loadRecipesFromGoogleDrive(
@@ -241,18 +280,32 @@ export default function App() {
         }
       }
 
-      if (driveFiles.length > 0) {
-        showNotice(`Google Drive synced: loaded ${driveFiles.length} recipes from your Drive!`, 'success');
-      } else {
-        showNotice('Google Drive synced. All recipes are up to date.', 'success');
+      setHasDriveToken(true);
+      if (isManual) {
+        if (driveFiles.length > 0) {
+          showNotice(`Google Drive synced: loaded ${driveFiles.length} recipes from your Drive!`, 'success');
+        } else {
+          showNotice('Google Drive synced. All recipes are up to date.', 'success');
+        }
       }
     } catch (err: any) {
       console.error('Full drive sync failure:', err);
-      if (err.message && (err.message.includes('403') || err.message.includes('insufficient') || err.message.includes('PERMISSION_DENIED') || err.message.includes('401'))) {
+      if (
+        err.message && 
+        (err.message.includes('AUTH_TOKEN_EXPIRED') || 
+         err.message.includes('403') || 
+         err.message.includes('insufficient') || 
+         err.message.includes('PERMISSION_DENIED') || 
+         err.message.includes('401'))
+      ) {
         setHasDriveToken(false);
-        showNotice('Google Drive permission needed: please sign in again to grant Drive access.', 'error');
+        if (isManual) {
+          showNotice('Google Drive connection expired. Click Reconnect Drive in your profile to renew.', 'info');
+        }
       } else {
-        showNotice(`Drive Sync Error: ${err.message}`, 'error');
+        if (isManual) {
+          showNotice(`Drive Sync: ${err.message}`, 'error');
+        }
       }
     } finally {
       setIsSyncingDrive(false);
@@ -454,7 +507,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Connect Drive prompt if not connected */}
+        {/* Connect Drive prompt or Reconnect notice */}
         {!hasDriveToken && !isAuthLoading && (
           <div className="mb-6 bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-neutral-50 border border-amber-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-start gap-3">
@@ -462,9 +515,13 @@ export default function App() {
                 <Cloud className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-xs sm:text-sm font-semibold text-neutral-900">Google Drive Auto-Sync</h4>
+                <h4 className="text-xs sm:text-sm font-semibold text-neutral-900">
+                  {currentUser ? 'Google Drive Cloud Sync Paused' : 'Google Drive Auto-Sync'}
+                </h4>
                 <p className="text-xs text-neutral-600 mt-0.5">
-                  Sign in with Google to automatically sync and load all recipe JSONs from your Google Drive folder.
+                  {currentUser 
+                    ? 'Your recipes remain safely stored here on this device. Reconnect Drive anytime to sync files with your Drive cookbook folder.'
+                    : 'Sign in with Google to automatically preserve and sync all heirloom recipes with your personal Google Drive.'}
                 </p>
               </div>
             </div>
@@ -473,7 +530,7 @@ export default function App() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium rounded-xl transition-colors cursor-pointer shrink-0 shadow-sm"
             >
               <Cloud className="w-3.5 h-3.5 text-amber-400" />
-              <span>Connect Google Drive</span>
+              <span>{currentUser ? 'Reconnect Google Drive' : 'Sign in with Google'}</span>
             </button>
           </div>
         )}
