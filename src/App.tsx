@@ -15,8 +15,7 @@ import {
   Copy,
   ExternalLink,
   Flame,
-  ChefHat,
-  Download
+  ChefHat
 } from 'lucide-react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { 
@@ -25,7 +24,8 @@ import {
   logOut, 
   getStoredDriveAccessToken,
   isDriveTokenFresh,
-  checkAndEnforceSessionExpiry
+  checkAndEnforceSessionExpiry,
+  getCachedUser
 } from './lib/firebase';
 import { 
   subscribeToRealtimeRecipes, 
@@ -42,13 +42,17 @@ import { RecipeDetailModal } from './components/RecipeDetailModal';
 import { ShareModal } from './components/ShareModal';
 import { RecipeFormModal } from './components/RecipeFormModal';
 import { LoginPromptModal } from './components/LoginPromptModal';
-import { DownloadRecipesModal } from './components/DownloadRecipesModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [hasDriveToken, setHasDriveToken] = useState<boolean>(false);
-  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+  const [currentUser, setCurrentUser] = useState<any | null>(() => getCachedUser());
+  const [hasDriveToken, setHasDriveToken] = useState<boolean>(
+    () => !!localStorage.getItem('google_drive_access_token') || !!localStorage.getItem('google_drive_connected')
+  );
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(false);
+  const [isGuestMode, setIsGuestMode] = useState<boolean>(
+    () => localStorage.getItem('heritage_heart_guest_mode') === 'true'
+  );
   const [recipes, setRecipes] = useState<Recipe[]>(() => getCachedRecipes());
   const [activeTab, setActiveTab] = useState<ActiveTab>('cookbook');
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,7 +63,6 @@ export default function App() {
   const [sharingRecipe, setSharingRecipe] = useState<Recipe | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
-  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   
   // Status feedback
   const [isSyncingDrive, setIsSyncingDrive] = useState(false);
@@ -78,38 +81,47 @@ export default function App() {
     setTimeout(() => setStatusNotification(null), 4500);
   };
 
-  // 1. Auth Listener: 30-day continuous login session & background Drive freshness check
+  // 1. Auth Listener: 4-month continuous login session & quiet background Drive sync
   useEffect(() => {
-    // Enforce 30-day session window
+    // Enforce 4-month (120-day) session window
     const sessionActive = checkAndEnforceSessionExpiry();
     if (!sessionActive) {
       setCurrentUser(null);
       setHasDriveToken(false);
       setIsAuthLoading(false);
-      showNotice('Your 30-day session has concluded. Please sign in to reconnect.', 'info');
+      showNotice('Your 4-month session has concluded. Please sign in to reconnect.', 'info');
       return;
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
       setIsAuthLoading(false);
 
       if (user) {
+        setCurrentUser(user);
+        setHasDriveToken(true);
+        setIsGuestMode(false);
+        localStorage.removeItem('heritage_heart_guest_mode');
+
         // Record session start timestamp if not already tracked
         if (!localStorage.getItem('auth_session_started_at')) {
           localStorage.setItem('auth_session_started_at', Date.now().toString());
         }
 
-        const fresh = isDriveTokenFresh();
-        setHasDriveToken(fresh);
-
-        // Auto-sync in background on open if Drive token is fresh
-        if (fresh && !autoSyncedRef.current) {
+        // Auto-sync in background on open once silently
+        if (!autoSyncedRef.current) {
           autoSyncedRef.current = true;
           handleFullDriveSync(user, false /* isManual = false: silent on load */);
         }
       } else {
-        setHasDriveToken(false);
+        // If not in Firebase memory, check cached local session before clearing
+        const cached = getCachedUser();
+        if (cached) {
+          setCurrentUser(cached);
+          setHasDriveToken(true);
+        } else {
+          setCurrentUser(null);
+          setHasDriveToken(false);
+        }
       }
     });
     return () => unsubscribe();
@@ -140,10 +152,13 @@ export default function App() {
     try {
       setIsSyncingDrive(true);
       const res = await signInWithGoogleOAuth();
-      setHasDriveToken(!!res.accessToken);
-      showNotice(`Signed in as ${res.user.displayName || res.user.email}. Syncing recipes with Google Drive...`, 'info');
-      // Immediately run full Drive sync on login!
-      await handleFullDriveSync(res.user, true);
+      setCurrentUser(res.user);
+      setHasDriveToken(true);
+      setIsGuestMode(false);
+      localStorage.removeItem('heritage_heart_guest_mode');
+      showNotice(`Signed in as ${res.user.displayName || res.user.email}. Remembered for 4 months!`, 'success');
+      // Quiet background Drive sync on login
+      await handleFullDriveSync(res.user, false);
     } catch (err: any) {
       console.error(err);
       showNotice(err.message || 'Authentication failed', 'error');
@@ -157,6 +172,8 @@ export default function App() {
     setCurrentUser(null);
     setHasDriveToken(false);
     autoSyncedRef.current = false;
+    setIsGuestMode(true);
+    localStorage.setItem('heritage_heart_guest_mode', 'true');
     showNotice('Signed out successfully. Recipes remain preserved on this device.', 'info');
   };
 
@@ -442,7 +459,6 @@ export default function App() {
         isSyncingDrive={isSyncingDrive}
         onSyncDrive={handleFullDriveSync}
         hasDriveAccess={hasDriveToken}
-        onOpenDownloadModal={() => setIsDownloadModalOpen(true)}
       />
 
       {/* Hero Welcome Banner */}
@@ -461,32 +477,21 @@ export default function App() {
             </p>
           </div>
 
-          {/* Category Filter Pills & Download Button */}
-          <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
-                    selectedCategory === cat
-                      ? 'bg-neutral-900 text-white shadow-xs'
-                      : 'bg-white border border-neutral-200 text-neutral-600 hover:border-neutral-300 hover:text-neutral-900'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => setIsDownloadModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 shadow-2xs transition-colors cursor-pointer"
-              title="Download Recipe JSON files for Google Drive"
-            >
-              <Download className="w-3.5 h-3.5 text-neutral-600" />
-              <span>Download Recipe JSONs</span>
-            </button>
+          {/* Category Filter Pills */}
+          <div className="mt-7 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-neutral-900 text-white shadow-xs'
+                    : 'bg-white border border-neutral-200 text-neutral-600 hover:border-neutral-300 hover:text-neutral-900'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
 
         </div>
@@ -504,34 +509,6 @@ export default function App() {
               <span className="hidden sm:inline text-amber-700">Checking your cookbook folder and Drive files</span>
             </div>
             <span className="text-[11px] font-medium text-amber-600 bg-amber-100/60 px-2 py-0.5 rounded-md">Live Sync</span>
-          </div>
-        )}
-
-        {/* Connect Drive prompt or Reconnect notice */}
-        {!hasDriveToken && !isAuthLoading && (
-          <div className="mb-6 bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-neutral-50 border border-amber-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-800 shrink-0">
-                <Cloud className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-semibold text-neutral-900">
-                  {currentUser ? 'Google Drive Cloud Sync Paused' : 'Google Drive Auto-Sync'}
-                </h4>
-                <p className="text-xs text-neutral-600 mt-0.5">
-                  {currentUser 
-                    ? 'Your recipes remain safely stored here on this device. Reconnect Drive anytime to sync files with your Drive cookbook folder.'
-                    : 'Sign in with Google to automatically preserve and sync all heirloom recipes with your personal Google Drive.'}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleSignIn}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium rounded-xl transition-colors cursor-pointer shrink-0 shadow-sm"
-            >
-              <Cloud className="w-3.5 h-3.5 text-amber-400" />
-              <span>{currentUser ? 'Reconnect Google Drive' : 'Sign in with Google'}</span>
-            </button>
           </div>
         )}
 
@@ -684,16 +661,14 @@ export default function App() {
         initialRecipe={editingRecipe}
       />
 
-      {/* Mandatory sign in / sign up modal */}
+      {/* Sign in / sign up modal (remembers login for 4 months, with guest browsing option) */}
       <LoginPromptModal
-        isOpen={!isAuthLoading && !currentUser}
+        isOpen={!isAuthLoading && !currentUser && !isGuestMode}
         onSignIn={handleSignIn}
-      />
-
-      {/* Download Recipe JSONs Modal */}
-      <DownloadRecipesModal
-        isOpen={isDownloadModalOpen}
-        onClose={() => setIsDownloadModalOpen(false)}
+        onClose={() => {
+          setIsGuestMode(true);
+          localStorage.setItem('heritage_heart_guest_mode', 'true');
+        }}
       />
 
       {/* Offline Status Toast Indicator */}

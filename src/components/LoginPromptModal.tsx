@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { ChefHat, Cloud, FolderHeart, ShieldCheck, ArrowRight } from 'lucide-react';
+import { ChefHat, Cloud, FolderHeart, ShieldCheck, ArrowRight, X } from 'lucide-react';
 
 interface LoginPromptModalProps {
   isOpen: boolean;
   onSignIn: () => Promise<void>;
+  onClose?: () => void;
 }
 
-export function LoginPromptModal({ isOpen, onSignIn }: LoginPromptModalProps) {
+export function LoginPromptModal({ isOpen, onSignIn, onClose }: LoginPromptModalProps) {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -34,6 +35,16 @@ export function LoginPromptModal({ isOpen, onSignIn }: LoginPromptModalProps) {
         id="login-prompt-modal-container"
         className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-neutral-200 overflow-hidden relative"
       >
+        {onClose && (
+          <button
+            onClick={onClose}
+            aria-label="Close modal"
+            className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-neutral-700 rounded-full hover:bg-neutral-100 transition-colors z-10 cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+
         {/* Minimal Clean Header */}
         <div className="px-6 pt-7 pb-5 border-b border-neutral-100 bg-neutral-50/70">
           <div className="w-10 h-10 rounded-xl bg-neutral-900 flex items-center justify-center text-white mb-3">
@@ -43,7 +54,7 @@ export function LoginPromptModal({ isOpen, onSignIn }: LoginPromptModalProps) {
             Welcome to Heritage &amp; Heart
           </h2>
           <p className="text-neutral-500 text-xs sm:text-sm mt-1 leading-relaxed">
-            Please sign in to access your heirloom recipes, kitchen notes, and Google Drive vault.
+            Sign in once to remember your recipes, kitchen notes, and Google Drive vault for 4 months.
           </p>
         </div>
 
@@ -78,17 +89,17 @@ export function LoginPromptModal({ isOpen, onSignIn }: LoginPromptModalProps) {
 
             <div className="flex items-start gap-3 p-3 rounded-xl bg-neutral-50 border border-neutral-100">
               <div className="w-8 h-8 rounded-lg bg-neutral-200/80 text-neutral-800 flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-4 h-4" />
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
               </div>
               <div>
-                <p className="font-semibold text-neutral-900 text-xs sm:text-sm">Real-time Cloud Sync</p>
-                <p className="text-[12px] text-neutral-500">Seamlessly edit across devices and securely share with family.</p>
+                <p className="font-semibold text-neutral-900 text-xs sm:text-sm">Continuous 4-Month Session</p>
+                <p className="text-[12px] text-neutral-500">Remembers your account across visits so you never have to re-login frequently.</p>
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="space-y-2 pt-2">
+          <div className="space-y-2.5 pt-2">
             <button
               id="google-signin-prompt-btn"
               type="button"
@@ -121,6 +132,16 @@ export function LoginPromptModal({ isOpen, onSignIn }: LoginPromptModalProps) {
               <span>{isSigningIn ? 'Signing in...' : 'Sign in with Google'}</span>
               {!isSigningIn && <ArrowRight className="w-4 h-4 ml-auto opacity-60" />}
             </button>
+
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-2 px-3 text-xs text-neutral-500 hover:text-neutral-800 font-medium transition-colors text-center cursor-pointer hover:bg-neutral-100 rounded-lg"
+              >
+                Continue as Guest (Browse Recipes)
+              </button>
+            )}
           </div>
         </div>
       </div>

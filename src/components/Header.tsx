@@ -14,7 +14,6 @@ import {
   X,
   RefreshCw,
   FolderOpen,
-  Download,
   ChevronDown,
   ShieldCheck,
   CheckCircle2,
@@ -36,7 +35,6 @@ interface HeaderProps {
   isSyncingDrive: boolean;
   onSyncDrive: () => void;
   hasDriveAccess: boolean;
-  onOpenDownloadModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -50,8 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCreate,
   isSyncingDrive,
   onSyncDrive,
-  hasDriveAccess,
-  onOpenDownloadModal
+  hasDriveAccess
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -151,18 +148,6 @@ export const Header: React.FC<HeaderProps> = ({
             {/* In-App PWA Install Prompt */}
             <PWAInstallButton />
 
-            {/* Download Recipe JSONs Modal Trigger */}
-            {onOpenDownloadModal && (
-              <button
-                onClick={onOpenDownloadModal}
-                title="Download Heirloom Recipe JSON files"
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5 text-neutral-600" />
-                <span>Recipe JSONs</span>
-              </button>
-            )}
-
             {/* Drive Status / Sync Indicator */}
             {currentUser && (
               <button
@@ -171,8 +156,8 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Sync recipes with Google Drive"
                 className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-700 transition-colors cursor-pointer"
               >
-                <Cloud className={`w-3.5 h-3.5 ${hasDriveAccess ? 'text-neutral-600' : 'text-amber-500'}`} />
-                <span>{isSyncingDrive ? 'Syncing...' : (hasDriveAccess ? 'Sync now' : 'Sync Drive')}</span>
+                <Cloud className="w-3.5 h-3.5 text-neutral-600" />
+                <span>{isSyncingDrive ? 'Syncing...' : 'Sync Drive'}</span>
                 {isSyncingDrive && <RefreshCw className="w-3 h-3 animate-spin ml-1 text-neutral-600" />}
               </button>
             )}
@@ -202,10 +187,8 @@ export const Header: React.FC<HeaderProps> = ({
                     )}
                     {/* Active Session Indicator */}
                     <span 
-                      className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-white ${
-                        hasDriveAccess ? 'bg-emerald-500' : 'bg-amber-500'
-                      }`} 
-                      title={hasDriveAccess ? 'Signed In & Google Drive Connected' : 'Signed In • Click to reconnect Drive'}
+                      className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-white bg-emerald-500" 
+                      title="Signed In • Active Session (Remembered for 4 Months)"
                     />
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-neutral-500 hidden sm:inline" />
@@ -243,10 +226,10 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="px-4 py-2.5 bg-neutral-50/70 border-b border-neutral-100 text-xs">
                       <div className="flex items-center gap-1.5 text-emerald-700 font-medium">
                         <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>Signed In Continuously</span>
+                        <span>Active Session (4 Months)</span>
                       </div>
                       <p className="text-[11px] text-neutral-500 mt-0.5 pl-5 leading-tight">
-                        Your session stays signed in for 30 days. Recipes remain saved locally and in your cookbook.
+                        Your login is remembered continuously for 4 months. All recipes remain instantly accessible.
                       </p>
                     </div>
 
@@ -254,26 +237,14 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="px-4 py-3 border-b border-neutral-100 text-xs">
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="font-semibold text-neutral-800">Google Drive Cloud Sync</span>
-                        {hasDriveAccess ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                            <CheckCircle2 className="w-3 h-3" /> Connected
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
-                            <AlertCircle className="w-3 h-3" /> Token Expired
-                          </span>
-                        )}
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                          <CheckCircle2 className="w-3 h-3" /> Connected
+                        </span>
                       </div>
 
-                      {hasDriveAccess ? (
-                        <p className="text-[11px] text-neutral-500 leading-normal mb-2.5">
-                          Recipes automatically sync with your Google Drive cookbook folder.
-                        </p>
-                      ) : (
-                        <p className="text-[11px] text-neutral-500 leading-normal mb-2.5">
-                          Drive token expired, but all recipes remain safely loaded in your app. Reconnect Drive anytime to sync files.
-                        </p>
-                      )}
+                      <p className="text-[11px] text-neutral-500 leading-normal mb-2.5">
+                        Recipes back up to your Google Drive cookbook folder.
+                      </p>
 
                       <button
                         onClick={() => {
@@ -281,14 +252,10 @@ export const Header: React.FC<HeaderProps> = ({
                           onSyncDrive();
                         }}
                         disabled={isSyncingDrive}
-                        className={`w-full inline-flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
-                          hasDriveAccess 
-                            ? 'bg-neutral-100 hover:bg-neutral-200 text-neutral-800' 
-                            : 'bg-neutral-900 hover:bg-neutral-800 text-white shadow-xs'
-                        }`}
+                        className="w-full inline-flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-medium transition-colors cursor-pointer bg-neutral-100 hover:bg-neutral-200 text-neutral-800"
                       >
-                        <Cloud className="w-3.5 h-3.5" />
-                        <span>{hasDriveAccess ? (isSyncingDrive ? 'Syncing...' : 'Sync Recipes Now') : 'Reconnect Google Drive'}</span>
+                        <Cloud className="w-3.5 h-3.5 text-neutral-600" />
+                        <span>{isSyncingDrive ? 'Syncing...' : 'Sync with Google Drive'}</span>
                         {isSyncingDrive && <RefreshCw className="w-3 h-3 animate-spin ml-1" />}
                       </button>
                     </div>
@@ -364,15 +331,6 @@ export const Header: React.FC<HeaderProps> = ({
             >
               Shared Recipes
             </button>
-            {onOpenDownloadModal && (
-              <button
-                onClick={() => { onOpenDownloadModal(); setMobileMenuOpen(false); }}
-                className="text-left px-3 py-2 rounded-lg text-sm text-neutral-800 font-medium flex items-center gap-2 bg-white border border-neutral-200"
-              >
-                <Download className="w-4 h-4 text-neutral-600" />
-                Download Recipe JSONs
-              </button>
-            )}
             {currentUser && (
               <button
                 onClick={() => { onSyncDrive(); setMobileMenuOpen(false); }}
